@@ -1,0 +1,4 @@
+.venv/
+modelos/*.tflite
+borradores/
+__pycache__/

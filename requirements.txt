@@ -1,0 +1,8 @@
+# Lo que necesita el motor de efectos (todo con licencia libre).
+# Python 3.10, 3.11 o 3.12: MediaPipe todavía no tiene versión para los más nuevos.
+numpy
+Pillow
+mediapipe>=0.10.14
+opencv-contrib-python
+# trae un ffmpeg propio por si no tienes uno instalado
+imageio-ffmpeg

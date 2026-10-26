@@ -1,0 +1,4 @@
+Poppins · Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+Licencia: SIL Open Font License 1.1 (https://openfontlicense.org). Se puede usar y compartir libremente; no se vende sola.
+Pesos incluidos: Light, Regular, Medium, Bold. Si hace falta otro (SemiBold, ExtraBold…), el motor de Reels lo baja de Google Fonts solo.
+En Figma, Poppins ya viene incluida (Google Fonts).
