@@ -15,7 +15,7 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 
 ## Instalarlo (una vez)
 
-1. Abre **Claude** en tu computadora, en la pestaña **Code**.
+1. Abre **Claude** en tu computadora, en la pestaña **Code** (en la pestaña Chat no funciona). Te vale cualquier carpeta.
 2. Pégale esto:
    ```
    Instala los efectos de github.com/remonkevin99-collab/efectos en mi carpeta de skills
@@ -34,7 +34,9 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
    ```
 3. Claude mira unos cuadros antes, para que nada te tape la cara, y te deja `tuvideo_efectos.mp4`.
 
-¿Algo no te gusta? Díselo con palabras normales: «más pequeño», «más lento», «la palabra más arriba».
+**Casi nunca sale perfecto a la primera:** míralo y pídele retoques con palabras normales («más pequeño», «más lento», «la palabra más arriba») hasta que te guste.
+
+¿Subtítulos? No son uno de los efectos, pero pídeselos («ponle subtítulos»). La música y los efectos de sonido no van incluidos: ponlos al subir o en tu editor.
 
 ## Los 13 efectos
 

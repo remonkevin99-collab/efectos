@@ -111,6 +111,18 @@ el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del
 
 `PY efectos.py --lista` enseña los mismos, con sus opciones al día.
 
+## Si te pide subtítulos
+
+No son uno de los 13 efectos, pero se ponen así, después de los efectos y sobre el vídeo que ya los lleva:
+1. Las palabras con su segundo: `PY motor/palabras.py video.mp4` (deja `video.palabras.json`).
+2. Un `.ass` con frases cortas de una línea (unas 3 o 4 palabras, como mucho ~22 letras), que entren con la primera palabra
+   y se vayan al empezar la siguiente frase: Poppins Bold (`fuentes/`), blanca con un borde negro fino, en el tercio de
+   abajo, sin tapar la cara ni salirse de x 60–1020 (en un vídeo de 1080 de ancho).
+3. Quemarlo con el ffmpeg del motor (`imageio_ffmpeg.get_ffmpeg_exe()`): filtro `subtitles=video.ass:fontsdir=fuentes`, el
+   audio igual (`-c:a copy`).
+4. Antes del vídeo entero, una foto para que la vea. La música y los efectos de sonido no van: se ponen al subir o en su
+   editor.
+
 ## Si algo falla
 
 - Los errores salen en español y dicen qué hacer: léelos y arréglalo.
