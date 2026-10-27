@@ -1,26 +1,37 @@
-"""cristal: tarjetas de cristal esmerilado que flotan alrededor de la persona, con gráficos que se mueven por dentro.
+"""cristal: ocho tarjetas de cristal grandes, apiñadas alrededor de la cabeza y los hombros, y varias por DETRÁS.
 
-Seis tarjetas pequeñas, como los widgets de un teléfono, a los dos lados de la cabeza:
-  - un contador grande que sube de 0 al número (`numero`), con su texto debajo (`texto_numero`);
-  - un anillo que se llena, con la resolución dentro (`resolucion`) y los cuadros por segundo debajo (`fps`);
-  - una pastilla con un interruptor que se enciende (`pastilla`; la última palabra va en el color de acento);
-  - la ficha del creador: su cara (sacada del propio vídeo), su nombre (`nombre`) y su @ (`usuario`);
-  - una etiqueta pequeña con una marca verde que se dibuja (`etiqueta`; vacía, no sale);
-  - una tarjeta «Editando…» con una onda de sonido que corre y una barra que avanza. Esta va DETRÁS de la persona: el
-    brazo la tapa en parte, y al moverse la destapa.
+Las tarjetas llenan el cuadro en dos columnas pegadas a la persona, cada una de un tercio del ancho más o menos:
+  - a la izquierda, arriba: la grande, con una palabra pequeña (`marca`), un número enorme que sube desde 0 (`numero`) y
+    su texto (`texto_numero`);
+  - a la derecha, arriba: una exportación (`exportando`) con su barra que se llena y el tanto por ciento que sube
+    («4K · 60 %», con `resolucion`);
+  - debajo: la ficha del creador, con su cara (sacada del propio vídeo), su nombre (`nombre`) y su @ (`usuario`);
+  - DETRÁS de la cabeza, a la izquierda: un calendario (`dia`, `fecha`) con lo que toca ese día (`evento`);
+  - DETRÁS de la cabeza, a la derecha: lo que se está editando (`editando_titulo`, `editando`), con la onda del sonido,
+    la barrita que avanza y los controles (atrás, play, adelante);
+  - DETRÁS del hombro derecho: un anillo que se llena, con la resolución y los cuadros por segundo dentro (`fps`);
+  - DETRÁS del brazo izquierdo: una marca verde que se dibuja (`etiqueta`);
+  - abajo, DELANTE: la pastilla (`pastilla`; la última palabra en el color de acento) con su interruptor.
+Cualquier texto vacío quita su tarjeta (o su parte).
 
-El cristal es de verdad: cada tarjeta desenfoca lo que tiene detrás (la de detrás, solo la pared: la persona no se cuela
-en su cristal), lo oscurece un poco y lleva un filo claro (más claro arriba a la izquierda), un brillo por dentro, un
-destello que la cruza una vez al llegar y una sombra suave. El color de acento (`color`) solo en los detalles.
+El cristal es de verdad: cada tarjeta desenfoca lo que tiene detrás (las de detrás, solo la pared: la persona no se cuela
+en su cristal), lo oscurece y lleva un filo claro (más claro arriba a la izquierda), un brillo por dentro, un destello que
+la cruza una vez al llegar y una sombra suave que cae en la pared, nunca en la persona. El color de acento (`color`), solo
+en los detalles. En las de detrás, la persona vuelve encima con el color limpio de su borde (sin filo de la pared).
 
-Cómo se mueven: entran una detrás de otra con un muelle suave (todas en los primeros 0,8 s), flotan despacio cada una a
-su ritmo mientras se anima lo de dentro (lo de dentro dura en proporción a lo que dure el efecto) y se van con un fundido
-y encogiéndose un poco en el último tercio de segundo. Al entrar y al salir, el cristal se empaña y se desempaña (no se
-funde: así nunca se ve doble lo de detrás).
+Cómo se mueven: salen como de detrás de la persona, todas en ~0,7 s, una detrás de otra y con un muelle (se pasan un
+poco y se asientan); flotan despacio, cada una a su ritmo; lo de dentro se anima en los primeros 3 s (lo que se suele
+ver de una escena), y se van con un fundido y encogiéndose un poco en el último tercio de segundo. Al entrar y al salir,
+el cristal se empaña y se desempaña (no se funde: así nunca se ve doble lo de detrás).
 
-Nunca tapan la cara: ninguna se acerca a menos de 0,6 anchos de cara (si la cara se mueve hacia una, la tarjeta se
-aparta). Todo queda en la zona segura. La silueta de la persona nunca se encoge; solo se le tapan los agujeritos sueltos
-que a veces trae el recorte, para que la tarjeta de detrás no se vea a través del brazo.
+Nunca tapan la cara: las de delante nunca se acercan a menos de 0,6 anchos de cara (si la cara va hacia una, la tarjeta
+se aparta); las de detrás pueden acercarse a la cabeza lo que quieran, porque la persona va encima. Todo el texto queda en
+la zona segura (de x 60 a x 1020 a 1080 de ancho; ni en los 180 px de arriba ni en los 380 de abajo, ni debajo de los
+botones de Instagram). La silueta de la persona nunca se encoge; solo se le tapan los agujeritos sueltos que a veces
+trae el recorte, para que una tarjeta de detrás no se vea a través del brazo.
+
+La colocación está pensada para alguien sentado a media distancia, con la cara hacia la mitad del cuadro (a ~777 px de
+alto a 1080 × 1920); si la cara está mucho más arriba o más abajo, todo se mueve con ella.
 
     .venv/bin/python efectos.py cristal tu_video.mp4 --op "nombre=TU NOMBRE" --op usuario=@tu_usuario --fotos 0.4,1.5,3.2
 """
@@ -33,55 +44,71 @@ from PIL import Image, ImageDraw
 import base as B
 
 NOMBRE = 'cristal'
-DESCRIPCION = ('Tarjetas de cristal que flotan a tu alrededor (un contador, un anillo de calidad, un interruptor, una '
-               'barra de edición y tu nombre); una pasa por detrás de ti y ninguna te tapa la cara')
+DESCRIPCION = ('Ocho tarjetas de cristal grandes pegadas a ti (un contador, tu ficha, una exportación que avanza, un '
+               'calendario, lo que se está editando, un anillo de calidad, una marca y «Editado por Claude»); varias '
+               'pasan por detrás de tu cabeza y tus hombros, y ninguna te tapa la cara')
 OPCIONES = {
-    'numero': '13',
-    'texto_numero': 'efectos',
-    'resolucion': '4K',
-    'fps': '30',
-    'pastilla': 'Editado por Claude',
-    'nombre': 'TU NOMBRE',
-    'usuario': '@tu_usuario',
-    'etiqueta': 'sin editor',          # vacía: esa tarjeta no sale
-    'color': '#8B5CF6',
+    'marca': 'Claude',                    # la palabra pequeña de arriba de la tarjeta grande (vacía: solo el destello)
+    'numero': '13',                       # el número enorme de la tarjeta grande (sube desde 0)
+    'texto_numero': 'efectos · un clip',  # lo que va debajo del número
+    'exportando': 'Exportando',           # la tarjeta de la barra que se llena (vacía: no sale)
+    'resolucion': '4K',                   # va junto al tanto por ciento («4K · 60 %») y dentro del anillo
+    'fps': '30',                          # dentro del anillo, debajo de la resolución («30 fps»)
+    'nombre': 'TU NOMBRE',                # la ficha: tu nombre…
+    'usuario': '@tu_usuario',             # …y tu @
+    'dia': 'MAR',                         # el calendario: el día de la semana…
+    'fecha': '27',                        # …el número del día (vacío: el calendario no sale)…
+    'evento': 'Subir el Reel',            # …y lo que toca ese día
+    'editando_titulo': 'AHORA EDITANDO',  # la línea pequeña de la tarjeta de edición
+    'editando': 'Cortes sin pausas',      # lo que se está editando (vacío: esa tarjeta no sale)
+    'etiqueta': 'sin editor',             # la marca verde que se dibuja (vacía: no sale)
+    'pastilla': 'Editado por Claude',     # la pastilla de abajo; la última palabra va en el color de acento (vacía: no sale)
+    'color': '#8B5CF6',                   # el color de acento
 }
 DURACION = 3.5
 
 # ── El cristal ──────────────────────────────────────────────────────────────────────────────────────────────────────
 DESENFOQUE = 28.0            # cuánto se desenfoca lo de detrás (a 1080)
+SOMBRA_PERSONA = (0.5, 7.0)   # la sombra de la persona en las tarjetas de detrás: cuánto oscurece y lo que se abre (a 1080)
 TINTE = (16, 12, 30)         # el tono oscuro del cristal (un violeta casi negro)
 OPACIDAD = 0.50              # cuánto pesa ese tono sobre lo de detrás
 VIVEZA = 1.18                # un poco más de color en lo desenfocado, como el cristal de un teléfono
 NIEBLA = 0.025               # un velo blanco muy suave: el esmerilado
 
 # ── El movimiento (segundos) ────────────────────────────────────────────────────────────────────────────────────────
-ENTRA = 0.55                 # lo que tarda el muelle de cada tarjeta
-ESCALONADO = 0.05            # cada tarjeta sale un poco después que la anterior (la última acaba a los 0,8 s)
-SALE = 0.32                  # el fundido del final (con el escalonado, los últimos 0,37 s)
-MARGEN_CARA = 0.6            # la distancia mínima a la cara, en anchos de cara
+ENTRA = 0.45                 # lo que tarda el muelle de cada tarjeta
+ESCALONADO = 0.035           # cada tarjeta sale un poco después que la anterior (la última acaba a los ~0,7 s)
+SALE = 0.32                  # el fundido del final (con el escalonado, los últimos ~0,4 s)
+DESDE_DENTRO = 0.13          # al entrar, cada tarjeta sale de esta fracción del camino hacia la cabeza (como de detrás)
+RITMO = 3.0                  # lo de dentro (el número, la barra, el anillo, las marcas) acaba en estos segundos
+MARGEN_CARA = 0.6            # la distancia mínima de las de delante a la cara, en anchos de cara
 AGUJERO_MAX = 64             # px² (a 1080): los agujeritos sueltos de la silueta hasta este tamaño se tapan
 
 # La colocación, a 1080 × 1920 (se escala con el vídeo). x, y: la esquina de arriba a la izquierda; con `der`, la x es
-# donde acaba por la derecha. `orden`: en qué turno entra. `detras`: pasa por detrás de la persona.
+# donde acaba por la derecha; con `centro`, dónde cae su mitad. `orden`: en qué turno entra. `detras`: pasa por detrás
+# de la persona. Las de detrás se meten tras la cabeza y los hombros de alguien sentado a media distancia; su texto queda
+# siempre del lado de fuera, donde la persona no llega.
 SITIOS = {
-    'contador': dict(x=76, y=238, orden=0),
-    'creador': dict(der=1004, y=196, orden=1),
-    'anillo': dict(x=806, y=470, orden=2),
-    'pastilla': dict(der=1004, y=330, orden=3),
-    'etiqueta': dict(x=76, y=742, orden=4),
-    'editando': dict(x=76, y=1004, orden=5, detras=True),
+    'editando': dict(x=598, y=520, orden=0, detras=True),     # tras la cabeza, a la derecha
+    'calendario': dict(x=64, y=540, orden=1, detras=True),    # tras la cabeza y el hombro, a la izquierda
+    'contador': dict(x=64, y=196, orden=2),
+    'creador': dict(der=1010, y=372, orden=3),
+    'anillo': dict(x=764, y=858, orden=4, detras=True),       # tras el hombro derecho
+    'etiqueta': dict(x=64, y=878, orden=5, detras=True),      # tras el brazo izquierdo
+    'exportando': dict(der=1010, y=196, orden=6),
+    'pastilla': dict(centro=540, y=1372, orden=7),
 }
-CARA_REFERENCIA_Y = 777      # la altura de la cara para la que está pensada la colocación; si la cara está mucho más arriba
-                             # o más abajo, todo se mueve con ella
-SS = 4                       # los iconos dibujados a mano se hacen 4 veces más grandes y se reducen (bordes suaves)
+CARA_REFERENCIA = (555, 777)  # dónde está la cara para la que está pensada la colocación (a 1080 × 1920); si está mucho
+                              # más arriba o más abajo, todo se mueve con ella
+SS = 4                        # los iconos dibujados a mano se hacen 4 veces más grandes y se reducen (bordes suaves)
+BLANCO = (255, 255, 255, 255)
 
 
 # ── Curvas ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 def _muelle(p):
-    """Un muelle suave: llega, se pasa un 6 % y se asienta (0 → 1)."""
+    """Un muelle: llega, se pasa un 10 % y se asienta (0 → 1)."""
     p = min(1.0, max(0.0, p))
-    return 1.0 - math.exp(-6.0 * p) * math.cos(6.9 * p) if p < 1.0 else 1.0
+    return 1.0 - math.exp(-5.5 * p) * math.cos(7.5 * p) if p < 1.0 else 1.0
 
 
 def _seno(x):
@@ -94,6 +121,11 @@ def _paso_suave(a, b, x):
     """De 0 a 1 entre a y b, suave (para arrays)."""
     k = np.clip((x - a) / (b - a), 0.0, 1.0)
     return k * k * (3.0 - 2.0 * k)
+
+
+def _ritmo(c):
+    """Lo de dentro se anima en RITMO segundos; si el efecto dura menos, todo se aprieta para que dé tiempo."""
+    return min(1.0, max(0.2, c.dur / RITMO))
 
 
 # ── Dibujo con números (todo en float, con decimales: nada salta) ───────────────────────────────────────────────────
@@ -157,20 +189,45 @@ def _premult(capa):
     return np.ascontiguousarray(a)
 
 
+class _Barra:
+    """Una barra horizontal redondeada (de x0 a x1, centrada en y) que se puede pintar llena hasta donde se quiera."""
+
+    def __init__(self, x0, x1, y, alto):
+        self.x0, self.x1, self.y, self.alto = x0, x1, y, alto
+        self.ox, self.oy = int(math.floor(x0)) - 2, int(math.floor(y - alto / 2)) - 2
+        w, h = int(math.ceil(x1 - x0)) + 5, int(math.ceil(alto)) + 5
+        xx, yy = _rejilla(w, h)
+        self.xx, self.yy = xx + self.ox, yy + self.oy
+
+    def hasta(self, k):
+        """La cobertura de la barra llena hasta la fracción k (0–1); con k pequeño, un puntito redondo."""
+        largo = max((self.x1 - self.x0) * min(1.0, max(0.0, k)), self.alto * 0.999)
+        return _cobertura(_sdf_caja(self.xx, self.yy, self.x0 + largo / 2, self.y, largo / 2, self.alto / 2,
+                                    self.alto / 2))
+
+    def degradado(self, a, b):
+        """Del color a (izquierda) al b (derecha), del tamaño del trozo de la barra."""
+        k = np.clip((self.xx - self.x0) / max(1e-3, self.x1 - self.x0), 0, 1)[..., None]
+        return (a + (b - a) * k).astype(np.float32)
+
+
 # ── Textos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 class Rotulo:
     """Un texto listo para colocar: su capa y dónde cae la tinta dentro de ella (para alinear la letra, no la caja)."""
 
-    def __init__(self, s, tam, peso, relleno):
+    def __init__(self, s, tam, peso, relleno, espacio=0.0):
         self.s = s
-        self.capa = B.texto(s, tam, peso, relleno)
+        self.capa = B.texto(s, tam, peso, relleno, espacio=espacio)
         f = B.fuente(peso, tam)
         asc, desc = f.getmetrics()
         self.pad = (self.capa.height - (asc + desc)) / 2
         caja_h = f.getbbox('H')
         self.medio = self.pad + (caja_h[1] + caja_h[3]) / 2          # la mitad de la altura de las mayúsculas
         self.alto_may = caja_h[3] - caja_h[1]
-        self.ancho = f.getlength(s)
+        if espacio:
+            self.ancho = sum(f.getlength(ch) for ch in s) + espacio * tam * max(0, len(s) - 1)
+        else:
+            self.ancho = f.getlength(s)
         self.w, self.h = self.capa.size
 
     def esquina(self, x, y, alinear='izq'):
@@ -188,9 +245,30 @@ class Rotulo:
         lienzo.alpha_composite(self.capa, self.esquina(x, y, alinear))
 
 
-def _tam_que_cabe(s, peso, tam, ancho):
-    largo = B.fuente(peso, 100).getlength(s) / 100.0
-    return min(tam, ancho / max(1e-3, largo))
+def _tam_que_cabe(s, peso, tam, ancho, espacio=0.0):
+    f = B.fuente(peso, 100)
+    largo = (sum(f.getlength(ch) for ch in s) + espacio * 100 * max(0, len(s) - 1)) if espacio else f.getlength(s)
+    return min(tam, ancho / max(1e-3, largo / 100.0))
+
+
+def _lineas(s, peso, tam, ancho, minimo):
+    """El texto en una línea; si para caber tendría que quedar más pequeño que `minimo`, en dos (partido por el espacio
+    que deja las dos líneas más parejas, pero sin dejar colgada al final de la primera una palabra corta como «sin», «de»
+    o «por»: «Cortes / sin pausas», no «Cortes sin / pausas»). Devuelve (líneas, tamaño)."""
+    s = ' '.join(s.split())
+    t1 = _tam_que_cabe(s, peso, tam, ancho)
+    if t1 >= minimo or ' ' not in s:
+        return [s], t1
+    f = B.fuente(peso, 100)
+    pal = s.split(' ')
+
+    def coste(k):
+        largo = max(f.getlength(' '.join(pal[:k])), f.getlength(' '.join(pal[k:])))
+        return largo * (1.35 if len(pal[k - 1]) <= 3 else 1.0)
+
+    mejor = min((coste(k), k) for k in range(1, len(pal)))
+    lin = [' '.join(pal[:mejor[1]]), ' '.join(pal[mejor[1]:])]
+    return lin, min(_tam_que_cabe(x, peso, tam, ancho) for x in lin)
 
 
 # ── Iconos dibujados a mano ─────────────────────────────────────────────────────────────────────────────────────────
@@ -213,7 +291,7 @@ def _destello(d, col):
     return im.resize((max(1, round(d)), max(1, round(d))), Image.LANCZOS)
 
 
-def _marca(d, p, u):
+def _marca(d, p):
     """El círculo verde con la marca dibujada hasta `p` (0–1)."""
     D = int(round(d * SS))
     im = Image.new('RGBA', (D, D), (0, 0, 0, 0))
@@ -225,18 +303,55 @@ def _marca(d, p, u):
         g = 0.19 * R
         largos = [math.dist(pts[i], pts[i + 1]) for i in range(2)]
         queda = p * sum(largos)
-        blanco = (255, 255, 255, 255)
-        dr.ellipse([pts[0][0] - g / 2, pts[0][1] - g / 2, pts[0][0] + g / 2, pts[0][1] + g / 2], fill=blanco)
+        dr.ellipse([pts[0][0] - g / 2, pts[0][1] - g / 2, pts[0][0] + g / 2, pts[0][1] + g / 2], fill=BLANCO)
         for i, L in enumerate(largos):
             if queda <= 0:
                 break
             k = min(1.0, queda / L)
             a, b = pts[i], pts[i + 1]
             fin = (a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k)
-            dr.line([a, fin], fill=blanco, width=int(round(g)))
-            dr.ellipse([fin[0] - g / 2, fin[1] - g / 2, fin[0] + g / 2, fin[1] + g / 2], fill=blanco)
+            dr.line([a, fin], fill=BLANCO, width=int(round(g)))
+            dr.ellipse([fin[0] - g / 2, fin[1] - g / 2, fin[0] + g / 2, fin[1] + g / 2], fill=BLANCO)
             queda -= L
     return im.resize((max(1, round(d)), max(1, round(d))), Image.LANCZOS)
+
+
+def _control(tipo, d, col):
+    """Un control de reproducción de d × d: 'atras' (barra y triángulo a la izquierda), 'play' (triángulo dentro de un
+    círculo de cristal) o 'adelante'."""
+    D = int(round(d * SS))
+    im = Image.new('RGBA', (D, D), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(im)
+    if tipo == 'play':
+        dr.ellipse([0, 0, D - 1, D - 1], fill=(255, 255, 255, 46))
+        dr.polygon([(D * 0.40, D * 0.29), (D * 0.40, D * 0.71), (D * 0.74, D * 0.50)], fill=col)
+    else:
+        izq = tipo == 'atras'
+        bx = (D * 0.22, D * 0.33) if izq else (D * 0.67, D * 0.78)
+        dr.rounded_rectangle([bx[0], D * 0.24, bx[1], D * 0.76], radius=D * 0.05, fill=col)
+        if izq:
+            dr.polygon([(D * 0.80, D * 0.24), (D * 0.80, D * 0.76), (D * 0.36, D * 0.50)], fill=col)
+        else:
+            dr.polygon([(D * 0.20, D * 0.24), (D * 0.20, D * 0.76), (D * 0.64, D * 0.50)], fill=col)
+    return im.resize((max(1, round(d)), max(1, round(d))), Image.LANCZOS)
+
+
+def _punto_que_late(capa, cx, cy, u, t, col, rejilla):
+    """Un punto de color con un aro que se abre y se apaga, una vez por segundo."""
+    ox, oy, pxx, pyy = rejilla
+    pr = np.sqrt((pxx + ox - cx) ** 2 + (pyy + oy - cy) ** 2)
+    ciclo = (t % 1.1) / 1.1
+    r_halo = 6.5 * u + 10 * u * B.sale(ciclo)
+    halo = np.clip(1.6 * u - np.abs(pr - r_halo) + 0.5, 0, 1).astype(np.float32)
+    _pintar(capa, halo, col, 0.55 * (1 - ciclo), ox, oy)
+    _pintar(capa, np.clip(6.5 * u - pr + 0.5, 0, 1).astype(np.float32), col, 1.0, ox, oy)
+
+
+def _rejilla_punto(cx, cy, u):
+    lado = int(math.ceil(44 * u))
+    ox, oy = int(round(cx - lado / 2)), int(round(cy - lado / 2))
+    xx, yy = _rejilla(lado, lado)
+    return ox, oy, xx, yy
 
 
 # ── Una tarjeta ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -308,168 +423,126 @@ class Tarjeta:
         return capa
 
 
-# ── Las seis tarjetas ───────────────────────────────────────────────────────────────────────────────────────────────
+# ── Las ocho tarjetas ───────────────────────────────────────────────────────────────────────────────────────────────
 def _contador(c, E):
-    u = c.u
+    """La grande: la palabra pequeña con su destello, el número enorme que sube desde 0 y su texto."""
+    u, R = c.u, _ritmo(c)
     try:
         n = abs(int(round(float(str(c.op.get('numero') or '0').replace(',', '.')))))
     except ValueError:
         n = 0
-    T = Tarjeta('contador', 244 * u, 268 * u, 40 * u, u)
-    pad = 26 * u
-    T.contenido.alpha_composite(_destello(28 * u, E['acento8']), (int(round(pad)), int(round(24 * u))))
-    texto = str(c.op.get('texto_numero') or '')
+    n = min(n, 9999)
+    T = Tarjeta('contador', 388 * u, 320 * u, 44 * u, u)
+    pad = 32 * u
+    T.contenido.alpha_composite(_destello(26 * u, E['acento8']), (int(round(pad)), int(round(30 * u))))
+    marca = str(c.op.get('marca') or '').strip()
+    if marca:
+        tam = _tam_que_cabe(marca, 'medium', 28 * u, T.w - 2 * pad - 38 * u)
+        Rotulo(marca, tam, 'medium', (255, 255, 255, 225)).poner(T.contenido, pad + 38 * u, 43 * u)
+    texto = str(c.op.get('texto_numero') or '').strip()
     if texto:
         tam = _tam_que_cabe(texto, 'medium', 30 * u, T.w - 2 * pad)
-        Rotulo(texto, tam, 'medium', (255, 255, 255, 178)).poner(T.contenido, pad, 222 * u)
-    tam_num = _tam_que_cabe(str(n), 'extrabold', 132 * u, T.w - 2 * pad)
-    numeros = [Rotulo(str(k), tam_num, 'extrabold', (255, 255, 255, 255)) for k in range(n + 1)]
-    capas = [_premult(r.capa) for r in numeros]
-    y_num = 146 * u
-    # cuándo pasa por cada número: sube rápido y frena al llegar (el 0 está desde el principio)
-    t0, t1 = 0.10 * c.dur, 0.55 * c.dur
+        Rotulo(texto, tam, 'medium', (255, 255, 255, 190)).poner(T.contenido, pad, 282 * u)
+    tam_num = _tam_que_cabe(str(n), 'extrabold', 188 * u, T.w - 2 * pad)
+    y_num = 168 * u
+    t0, t1 = 0.15 * R, 1.00 * R
+    # cuándo pasa por cada número: sube rápido y frena al llegar (el 0 está desde el principio). Solo se dibujan los
+    # números por los que pasa de verdad (a 30 cuadros/s, como mucho uno por cuadro), y se guardan al usarlos.
+    pasos = sorted({0, n} | {int(round(n * (1.0 - (1.0 - j / 40.0) ** 3))) for j in range(41)}) if n > 0 else [0]
     cruces = [t0]
-    for k in range(1, n + 1):
+    for k in pasos[1:]:
         y = (k - 0.5) / n
         cruces.append(t0 + (1.0 - (1.0 - y) ** (1.0 / 3.0)) * (t1 - t0))
+    capas = {}
     rueda = 0.10                                      # lo que tarda cada número nuevo en asentarse
-    sube = 0.12 * numeros[0].alto_may
+
+    def numero(k):
+        if k not in capas:
+            r = Rotulo(str(k), tam_num, 'extrabold', BLANCO)
+            capas[k] = (r, _premult(r.capa))
+        return capas[k]
 
     def animar(capa, t):
         # siempre un solo número (nunca dos encima ni trozos): el nuevo llega subiendo un poco y se enciende
-        k = 0
-        while k < n and t >= cruces[k + 1]:
-            k += 1
-        hueco = (cruces[k + 1] - cruces[k]) if k < n else rueda
-        q = B.sale(B.tramo(t, cruces[k], cruces[k] + min(rueda, max(hueco, 1e-3)))) if k > 0 else 1.0
-        x0, y0 = numeros[k].esquina(pad, y_num)
-        _sobre(capa, capas[k], x0, int(round(y0 + (1.0 - q) * sube)), 0.55 + 0.45 * q)
+        i = 0
+        while i < len(pasos) - 1 and t >= cruces[i + 1]:
+            i += 1
+        hueco = (cruces[i + 1] - cruces[i]) if i < len(pasos) - 1 else rueda
+        q = B.sale(B.tramo(t, cruces[i], cruces[i] + min(rueda, max(hueco, 1e-3)))) if i > 0 else 1.0
+        r, arr = numero(pasos[i])
+        x0, y0 = r.esquina(pad - 4 * u, y_num)
+        _sobre(capa, arr, x0, int(round(y0 + (1.0 - q) * 0.12 * r.alto_may)), 0.55 + 0.45 * q)
 
     T.animar = animar
     return T
 
 
-def _anillo(c, E):
-    u = c.u
-    T = Tarjeta('anillo', 200 * u, 252 * u, 40 * u, u)
-    R, g = 64 * u, 13 * u                          # el radio (al centro del trazo) y el grosor
-    cx, cy = T.w / 2, 106 * u
-    lado = int(math.ceil(2 * (R + g + 14 * u)))
-    ox, oy = int(round(cx - lado / 2)), int(round(cy - lado / 2))
-    xx, yy = _rejilla(lado, lado)
-    dx, dy = xx + ox - cx, yy + oy - cy
-    radio = np.sqrt(dx * dx + dy * dy)
-    ang = np.mod(np.arctan2(dx, -dy), 2 * math.pi).astype(np.float32)      # 0 arriba, a favor del reloj
-    d_aro = np.abs(radio - R)
-    pista = np.clip(g / 2 - d_aro + 0.5, 0, 1).astype(np.float32)
-    texto = str(c.op.get('resolucion') or '')
-    if texto:
-        tam = _tam_que_cabe(texto, 'extrabold', 50 * u, 2 * (R - g / 2) - 18 * u)
-        Rotulo(texto, tam, 'extrabold', (255, 255, 255, 255)).poner(T.contenido, cx, cy, 'centro')
-    fps = str(c.op.get('fps') or '').strip()
-    if fps:
-        fps = fps if not fps.replace('.', '').replace(',', '').isdigit() else f'{fps} fps'
-        Rotulo(fps, _tam_que_cabe(fps, 'medium', 28 * u, T.w - 40 * u), 'medium', (255, 255, 255, 178)).poner(
-            T.contenido, cx, 216 * u, 'centro')
-    _pintar(T.base, pista, (1.0, 1.0, 1.0), 0.13, ox, oy)
-    acento, claro = E['acento'], E['claro']
-    t0, t1 = 0.12 * c.dur, 0.60 * c.dur
+def _exportando(c, E):
+    """La exportación: «● Exportando», la barra que se llena y «4K · 60 %» que sube hasta el 100 %."""
+    u, R = c.u, _ritmo(c)
+    texto = str(c.op.get('exportando') or '').strip()
+    if not texto:
+        return None
+    T = Tarjeta('exportando', 420 * u, 150 * u, 36 * u, u)
+    pad = 32 * u
+    y1 = 46 * u
+    Rotulo(texto, _tam_que_cabe(texto, 'bold', 29 * u, T.w - 2 * pad - 26 * u), 'bold', BLANCO).poner(
+        T.contenido, pad + 24 * u, y1)
+    barra = _Barra(pad, T.w - pad, 90 * u, 10 * u)
+    _pintar(T.base, barra.hasta(1.0), (1.0, 1.0, 1.0), 0.14, barra.ox, barra.oy)
+    color_barra = barra.degradado(E['acento'], E['claro'])
+    res = str(c.op.get('resolucion') or '').strip()
+    tam_pc = 23 * u
+    y_pc = 124 * u
+    rotulos = {}
+
+    def tanto(k):
+        if k not in rotulos:
+            s = f'{res} · {k} %' if res else f'{k} %'
+            r = Rotulo(s, tam_pc, 'medium', (255, 255, 255, 178))
+            rotulos[k] = (r.esquina(pad, y_pc), _premult(r.capa))
+        return rotulos[k]
+
+    punto = _rejilla_punto(pad + 7 * u, y1, u)
+    verde = np.array([34, 197, 94], np.float32) / 255.0
+    ta, tb = 0.30 * R, 2.90 * R
 
     def animar(capa, t):
-        p = B.suave(B.tramo(t, t0, t1))
-        if p <= 0.0:
-            return
-        A = p * 2 * math.pi
-        if p >= 0.9995:
-            d = d_aro
-            pos = ang / (2 * math.pi)
-        else:
-            sa, ca = math.sin(A), math.cos(A)
-            d0 = np.sqrt(dx * dx + (dy + R) ** 2)                       # la punta del principio
-            d1 = np.sqrt((dx - R * sa) ** 2 + (dy + R * ca) ** 2)       # la punta que avanza
-            dentro = ang <= A
-            d = np.where(dentro, d_aro, np.minimum(d0, d1))
-            pos = np.where(dentro, ang / max(A, 1e-4), np.where(d1 < d0, 1.0, 0.0))
-        cob = np.clip(g / 2 - d + 0.5, 0, 1).astype(np.float32) * min(1.0, p / 0.03)
-        # el brillo de debajo del trazo, que sube un poco al completarse
-        lleno = B.tramo(t, t1, t1 + 0.35)
-        brillo = 0.42 + 0.30 * math.sin(math.pi * lleno)
-        halo = cv2.GaussianBlur(cob, (0, 0), 6 * u)
-        _pintar(capa, halo, acento, brillo, ox, oy)
-        col = acento + (claro - acento) * pos[..., None]
-        _pintar(capa, cob, col, 1.0, ox, oy)
-
-    T.animar = animar
-    return T
-
-
-def _pastilla(c, E):
-    u = c.u
-    texto = str(c.op.get('pastilla') or '').strip()
-    antes, _, ultima = texto.rpartition(' ')
-    h = 92 * u
-    tam = 29 * u
-    r1 = Rotulo(antes + ' ', tam, 'medium', (255, 255, 255, 222)) if antes else None
-    r2 = Rotulo(ultima, tam, 'bold', E['claro8'])
-    pista_w, pista_h = 78 * u, 44 * u
-    izq, hueco, der = 32 * u, 22 * u, 24 * u
-    ancho_txt = (r1.ancho if r1 else 0) + r2.ancho
-    w = izq + ancho_txt + hueco + pista_w + der
-    T = Tarjeta('pastilla', w, h, h / 2, u)
-    x = izq
-    if r1:
-        r1.poner(T.contenido, x, T.h / 2)
-        x += r1.ancho
-    r2.poner(T.contenido, x, T.h / 2)
-    # el interruptor
-    px0 = T.w - der - pista_w
-    py0 = (T.h - pista_h) / 2
-    ox, oy = int(math.floor(px0)) - 2, int(math.floor(py0)) - 4
-    lw, lh = int(math.ceil(pista_w)) + 5, int(math.ceil(pista_h)) + 9
-    xx, yy = _rejilla(lw, lh)
-    xx, yy = xx + ox, yy + oy
-    pista = _cobertura(_sdf_caja(xx, yy, px0 + pista_w / 2, py0 + pista_h / 2, pista_w / 2, pista_h / 2, pista_h / 2))
-    rb = pista_h / 2 - 4 * u                                          # el radio de la bola
-    xa, xb = px0 + pista_h / 2, px0 + pista_w - pista_h / 2
-    yb = py0 + pista_h / 2
-    acento = E['acento']
-    t_on = 0.30 * c.dur
-    d_on = 0.10 * c.dur
-
-    def animar(capa, t):
-        q = _muelle(B.tramo(t, t_on, t_on + d_on * 1.6))                # la bola llega con un muelle corto
-        k = B.suave(B.tramo(t, t_on, t_on + d_on))                      # el color de la pista
-        col = np.array([1.0, 1.0, 1.0], np.float32) * (1 - k) + acento * k
-        _pintar(capa, pista, col, 0.20 + 0.80 * k, ox, oy)
-        bx = xa + (xb - xa) * q
-        d = np.sqrt((xx - bx) ** 2 + (yy - yb - 1.5 * u) ** 2)
-        sombra = np.clip((rb + 2.5 * u - d) / (4.0 * u), 0, 1).astype(np.float32)
-        _pintar(capa, sombra * sombra, (0.0, 0.0, 0.0), 0.28, ox, oy)
-        d = np.sqrt((xx - bx) ** 2 + (yy - yb) ** 2)
-        _pintar(capa, np.clip(rb - d + 0.5, 0, 1).astype(np.float32), (1.0, 1.0, 1.0), 1.0, ox, oy)
+        p = B.tramo(t, ta, tb)
+        p = 0.6 * p + 0.4 * B.suave(p)                    # arranca, corre y frena un poco al final
+        k = int(math.floor(p * 100 + 1e-6))
+        listo = k >= 100
+        _punto_que_late(capa, pad + 7 * u, y1, u, t, verde if listo else E['acento'], punto)
+        if p > 0:
+            _pintar(capa, barra.hasta(p), color_barra, min(1.0, p / 0.02), barra.ox, barra.oy)
+        (x0, y0), arr = tanto(k)
+        _sobre(capa, arr, x0, y0)
 
     T.animar = animar
     return T
 
 
 def _creador(c, E):
+    """La ficha: la cara del propio vídeo en un círculo con su aro, el nombre y el @."""
     u = c.u
-    h = 104 * u
-    d_foto, hueco_aro, g_aro = 66 * u, 3 * u, 2.6 * u
+    h = 124 * u
+    d_foto, hueco_aro, g_aro = 90 * u, 3.5 * u, 3 * u
     d_total = d_foto + 2 * (hueco_aro + g_aro)
-    izq = 13 * u
+    izq = 14 * u
     fx = izq + d_total / 2
     nombre = str(c.op.get('nombre') or '').strip()
     usuario = str(c.op.get('usuario') or '').strip()
-    rn = Rotulo(nombre, 28 * u, 'bold', (255, 255, 255, 255)) if nombre else None
-    ru = Rotulo(usuario, 22 * u, 'regular', (255, 255, 255, 168)) if usuario else None
-    x_txt = izq + d_total + 16 * u
+    x_txt = izq + d_total + 18 * u
+    ancho_max = 540 * u - x_txt - 34 * u       # como mucho 540: no llega a la columna de la izquierda
+    rn = Rotulo(nombre, _tam_que_cabe(nombre, 'bold', 31 * u, ancho_max), 'bold', BLANCO) if nombre else None
+    ru = Rotulo(usuario, _tam_que_cabe(usuario, 'regular', 24 * u, ancho_max), 'regular', (255, 255, 255, 172)) \
+        if usuario else None
     ancho_txt = max(rn.ancho if rn else 0, ru.ancho if ru else 0)
-    w = min(x_txt + ancho_txt + 34 * u, 640 * u)
+    w = min(max(x_txt + ancho_txt + 36 * u, 420 * u), 540 * u)
     T = Tarjeta('creador', w, h, h / 2, u)
     if rn and ru:
-        rn.poner(T.contenido, x_txt, 41 * u)
-        ru.poner(T.contenido, x_txt, 70 * u)
+        rn.poner(T.contenido, x_txt, 48 * u)
+        ru.poner(T.contenido, x_txt, 83 * u)
     elif rn or ru:
         (rn or ru).poner(T.contenido, x_txt, T.h / 2)
     # la foto: la cara del propio vídeo, en un círculo con un aro del color de acento
@@ -504,66 +577,90 @@ def _creador(c, E):
     return T
 
 
-def _etiqueta(c, E):
-    u = c.u
-    texto = str(c.op.get('etiqueta') or '').strip()
-    if not texto:
+def _calendario(c, E):
+    """El calendario: el día de la semana en el color de acento, el número grande y lo que toca, que entra de lado."""
+    u, R = c.u, _ritmo(c)
+    fecha = str(c.op.get('fecha') or '').strip()
+    if not fecha:
         return None
-    h = 74 * u
-    d = 38 * u
-    izq = 18 * u
-    rt = Rotulo(texto, 27 * u, 'medium', (255, 255, 255, 240))
-    w = izq + d + 12 * u + rt.ancho + 26 * u
-    T = Tarjeta('etiqueta', w, h, h / 2, u)
-    rt.poner(T.contenido, izq + d + 12 * u, T.h / 2)
-    cx, cy = izq + d / 2, T.h / 2
-    lado = int(math.ceil(d)) + 4
-    ox, oy = int(round(cx - lado / 2)), int(round(cy - lado / 2))
-    xx, yy = _rejilla(lado, lado)
-    radio = np.sqrt((xx + ox - cx) ** 2 + (yy + oy - cy) ** 2)
-    aro = np.clip(1.3 * u - np.abs(radio - (d / 2 - 1.3 * u)) + 0.5, 0, 1).astype(np.float32)
-    t_marca = 0.42 * c.dur
-    cache = {}
+    T = Tarjeta('calendario', 436 * u, 304 * u, 40 * u, u, detras=True)
+    pad = 32 * u
+    util = 300 * u - pad                          # el texto, solo en la parte de fuera (la de dentro va tras la cabeza)
+    dia = str(c.op.get('dia') or '').strip().upper()
+    if dia:
+        Rotulo(dia, _tam_que_cabe(dia, 'bold', 28 * u, util, 0.12), 'bold', E['claro8'], espacio=0.12).poner(
+            T.contenido, pad, 48 * u)
+    Rotulo(fecha, _tam_que_cabe(fecha, 'extrabold', 128 * u, util), 'extrabold', BLANCO).poner(
+        T.contenido, pad - 3 * u, 140 * u)
+    evento = str(c.op.get('evento') or '').strip()
+    if not evento:
+        return T
+    # lo que toca: una pastilla del color de acento, que entra de izquierda a derecha
+    ph = 54 * u
+    tam = _tam_que_cabe(evento, 'bold', 25 * u, util - 44 * u)
+    re = Rotulo(evento, tam, 'bold', BLANCO)
+    pw = re.ancho + 44 * u
+    px0, py0 = int(math.floor(pad)), int(math.floor(244 * u - ph / 2))
+    lw, lh = int(math.ceil(pw)) + 3, int(math.ceil(ph)) + 3
+    xx, yy = _rejilla(lw, lh)
+    forma = _cobertura(_sdf_caja(xx, yy, (pad - px0) + pw / 2, (244 * u - py0), pw / 2, ph / 2, ph / 2))
+    pastilla = np.zeros((lh, lw, 4), np.float32)
+    _pintar(pastilla, forma, E['acento'], 0.92)
+    letras = Image.new('RGBA', (lw, lh), (0, 0, 0, 0))
+    re.poner(letras, (pad - px0) + 22 * u, 244 * u - py0)
+    _sobre(pastilla, _premult(letras), 0, 0)
+    xs = (np.arange(lw, dtype=np.float32) + 0.5)[None, :, None]
+    borde = 18 * u
+    ta, tb = 0.50 * R, 0.85 * R
 
     def animar(capa, t):
-        dt = t - t_marca
-        if dt < 0.12:
-            _pintar(capa, aro, (1.0, 1.0, 1.0), 0.42 * (1 - B.tramo(dt, 0.0, 0.12)), ox, oy)
-        if dt <= 0:
+        k = B.tramo(t, ta, tb)
+        if k <= 0:
             return
-        q = round(B.sale(B.tramo(dt, 0.10, 0.40)) * 30) / 30          # la marca se dibuja (guardada por trozos)
-        esc = 0.4 + 0.6 * B.rebote(B.tramo(dt, 0, 0.30), 1.6)
-        dd = d * esc
-        clave = (q, round(dd * 4) / 4)
-        icono = cache.get(clave)
-        if icono is None:
-            if len(cache) > 120:
-                cache.clear()
-            icono = cache[clave] = _premult(_marca(dd, q, u))
-        x0, y0 = int(round(cx - icono.shape[1] / 2)), int(round(cy - icono.shape[0] / 2))
-        _sobre(capa, icono, x0, y0, B.tramo(dt, 0, 0.08))
+        frente = -borde + (lw + 2 * borde) * B.sale(k)
+        m = np.clip((frente - xs) / borde, 0, 1)
+        _sobre(capa, pastilla * m, px0, py0, min(1.0, k / 0.15))
 
     T.animar = animar
     return T
 
 
 def _editando(c, E):
+    """Lo que se está editando: la línea pequeña, el título, la onda del sonido que corre, la barrita con su cabezal y
+    los controles. Todo va a la derecha: la parte de la izquierda (cristal liso) se mete detrás de la cabeza. Nada que se
+    mueva puede quedar bajo el borde de la persona: en ese borde suave, unas barras claras que cambian cada cuadro se
+    transparentan y salen como una línea de puntitos que parpadea pegada a la sien."""
     u = c.u
-    T = Tarjeta('editando', 320 * u, 150 * u, 34 * u, u, detras=True)
-    pad = 28 * u
-    y1 = 40 * u
-    rt = Rotulo('Editando', 27 * u, 'bold', (255, 255, 255, 255))
-    rt.poner(T.contenido, 50 * u, y1)
-    x_puntos = 50 * u + rt.ancho + 4.5 * u
-    y_puntos = y1 + rt.alto_may / 2 - 2.6 * u
-    # la barra de progreso (su pista, quieta)
-    by, bh = 126 * u, 6 * u
-    bx0, bx1 = pad, T.w - pad
-    _pintar(T.base, _cobertura(_sdf_caja(T.xx, T.yy, (bx0 + bx1) / 2, by, (bx1 - bx0) / 2, bh / 2, bh / 2)),
-            (1.0, 1.0, 1.0), 0.14)
-    # la onda: barras que corren hacia la izquierda y cambian de alto, como el audio al editar
-    oy0, oh = int(round(62 * u)), int(round(46 * u))
-    ox0, ow = int(round(pad)), int(round(T.w - 2 * pad))
+    titulo = str(c.op.get('editando') or '').strip()
+    if not titulo:
+        return None
+    T = Tarjeta('editando', 414 * u, 312 * u, 40 * u, u, detras=True)
+    x0, der = 140 * u, 28 * u
+    ancho_txt = T.w - x0 - der
+    pequeno = str(c.op.get('editando_titulo') or '').strip().upper()
+    if pequeno:
+        Rotulo(pequeno, _tam_que_cabe(pequeno, 'medium', 19 * u, ancho_txt, 0.14), 'medium', (255, 255, 255, 160),
+               espacio=0.14).poner(T.contenido, x0, 44 * u)
+    lineas, tam = _lineas(titulo, 'bold', 34 * u, ancho_txt, 29 * u)
+    y = 84 * u if len(lineas) > 1 else 96 * u
+    for linea in lineas:
+        Rotulo(linea, tam, 'bold', BLANCO).poner(T.contenido, x0, y)
+        y += tam * 1.13
+    # los controles: atrás, play y adelante, centrados en la parte de fuera
+    cxc, cyc = (x0 + T.w - der) / 2, 270 * u
+    for tipo, dx, d, a in (('atras', -66, 30, 205), ('play', 0, 52, 255), ('adelante', 66, 30, 205)):
+        ic = _control(tipo, d * u, (255, 255, 255, a))
+        T.contenido.alpha_composite(ic, (int(round(cxc + dx * u - ic.width / 2)), int(round(cyc - ic.height / 2))))
+    # la barrita con su cabezal
+    xi = x0 - 6 * u                                 # donde empieza lo que se mueve: fuera del alcance de la cabeza
+    barra = _Barra(xi, T.w - der, 230 * u, 6 * u)
+    _pintar(T.base, barra.hasta(1.0), (1.0, 1.0, 1.0), 0.16, barra.ox, barra.oy)
+    color_barra = barra.degradado(E['acento'], E['claro'])
+    lado_c = int(math.ceil(24 * u))
+    cxx, cyy = _rejilla(lado_c, lado_c)
+    # la onda: barras que corren hacia la izquierda y cambian de alto, como el sonido al editar
+    oy0, oh = int(round(158 * u)), int(round(44 * u))
+    ox0, ow = int(round(xi)), int(round(T.w - der - xi))
     wx, wy = _rejilla(ow, oh)
     paso, ancho_barra = 10 * u, 5 * u
     azar = np.random.default_rng(7)
@@ -573,32 +670,10 @@ def _editando(c, E):
     borde = np.minimum(_paso_suave(0, 18 * u, wx[0]), _paso_suave(ow, ow - 18 * u, wx[0])).astype(np.float32)
     degradado = (E['acento'] + (E['claro'] - E['acento']) * (wx[0] / ow)[:, None]).astype(np.float32)
     degradado = np.broadcast_to(degradado[None], (oh, ow, 3))
-    acento = E['acento']
-    lado_p = int(math.ceil(44 * u))
-    px0, py0 = int(round(32 * u - lado_p / 2)), int(round(y1 - lado_p / 2))
-    pxx, pyy = _rejilla(lado_p, lado_p)
-    pr = np.sqrt((pxx + px0 - 32 * u) ** 2 + (pyy + py0 - y1) ** 2)
-    t0, t1 = 0.10 * c.dur, 0.92 * c.dur
 
     def animar(capa, t):
-        # el punto que late (con un aro que se abre)
-        ciclo = (t % 1.1) / 1.1
-        r_halo = 6.5 * u + 10 * u * B.sale(ciclo)
-        halo = np.clip(1.6 * u - np.abs(pr - r_halo) + 0.5, 0, 1).astype(np.float32)
-        _pintar(capa, halo, acento, 0.55 * (1 - ciclo), px0, py0)
-        _pintar(capa, np.clip(6.5 * u - pr + 0.5, 0, 1).astype(np.float32), acento, 1.0, px0, py0)
-        # los tres puntos de «Editando…», en ola
-        for k in range(3):
-            a = 0.28 + 0.72 * max(0.0, math.sin(2 * math.pi * 1.25 * t - k * 0.85))
-            cxp = x_puntos + k * 7.5 * u
-            lp = int(math.ceil(8 * u))
-            qx0, qy0 = int(round(cxp - lp / 2)), int(round(y_puntos - lp / 2))
-            qxx, qyy = _rejilla(lp, lp)
-            dd = np.sqrt((qxx + qx0 - cxp) ** 2 + (qyy + qy0 - y_puntos) ** 2)
-            _pintar(capa, np.clip(2.3 * u - dd + 0.5, 0, 1).astype(np.float32), (1.0, 1.0, 1.0), a, qx0, qy0)
         # la onda
-        corre = t * 34 * u
-        xsft = wx[0] + corre
+        xsft = wx[0] + t * 34 * u
         j = np.floor(xsft / paso).astype(np.int64)
         local = xsft - (j + 0.5) * paso
         jj = np.mod(j, 4096)
@@ -606,15 +681,168 @@ def _editando(c, E):
         rb = ancho_barra / 2
         largo = np.maximum(altura - rb, 0)[None, :]
         d = np.sqrt(local[None, :] ** 2 + np.maximum(np.abs(wy - oh / 2) - largo, 0) ** 2) - rb
-        cob = _cobertura(d) * borde[None, :]
-        _pintar(capa, cob, degradado, 0.95, ox0, oy0)
-        # la barra que avanza
+        _pintar(capa, _cobertura(d) * borde[None, :], degradado, 0.95, ox0, oy0)
+        # la barrita avanza todo el rato, despacio, como un vídeo que se reproduce
+        p = 0.10 + 0.80 * min(1.0, t / max(c.dur, 1e-3))
+        _pintar(capa, barra.hasta(p), color_barra, 1.0, barra.ox, barra.oy)
+        hx = barra.x0 + (barra.x1 - barra.x0) * p
+        qx0, qy0 = int(round(hx - lado_c / 2)), int(round(barra.y - lado_c / 2))
+        dd = np.sqrt((cxx + qx0 - hx) ** 2 + (cyy + qy0 - barra.y - 1.2 * u) ** 2)
+        _pintar(capa, np.clip((9 * u - dd) / (3 * u), 0, 1).astype(np.float32) ** 2, (0.0, 0.0, 0.0), 0.30, qx0, qy0)
+        dd = np.sqrt((cxx + qx0 - hx) ** 2 + (cyy + qy0 - barra.y) ** 2)
+        _pintar(capa, np.clip(7 * u - dd + 0.5, 0, 1).astype(np.float32), (1.0, 1.0, 1.0), 1.0, qx0, qy0)
+
+    T.animar = animar
+    return T
+
+
+def _anillo(c, E):
+    """El anillo que se llena, con la resolución grande dentro y los cuadros por segundo debajo."""
+    u, R = c.u, _ritmo(c)
+    T = Tarjeta('anillo', 246 * u, 190 * u, 40 * u, u, detras=True)
+    Ra, g = 70 * u, 12 * u                         # el radio (al centro del trazo) y el grosor
+    cx, cy = T.w / 2 + 14 * u, T.h / 2           # un poco a la derecha: el borde del hombro no llega al aro
+    lado = int(math.ceil(2 * (Ra + g + 14 * u)))
+    ox, oy = int(round(cx - lado / 2)), int(round(cy - lado / 2))
+    xx, yy = _rejilla(lado, lado)
+    dx, dy = xx + ox - cx, yy + oy - cy
+    radio = np.sqrt(dx * dx + dy * dy)
+    ang = np.mod(np.arctan2(dx, -dy), 2 * math.pi).astype(np.float32)      # 0 arriba, a favor del reloj
+    d_aro = np.abs(radio - Ra)
+    pista = np.clip(g / 2 - d_aro + 0.5, 0, 1).astype(np.float32)
+    dentro = 2 * (Ra - g / 2) - 26 * u
+    texto = str(c.op.get('resolucion') or '').strip()
+    fps = str(c.op.get('fps') or '').strip()
+    if fps:
+        fps = fps if not fps.replace('.', '').replace(',', '').isdigit() else f'{fps} fps'
+    if texto:
+        Rotulo(texto, _tam_que_cabe(texto, 'extrabold', 46 * u, dentro), 'extrabold', BLANCO).poner(
+            T.contenido, cx, cy - (12 * u if fps else 0), 'centro')
+    if fps:
+        Rotulo(fps, _tam_que_cabe(fps, 'medium', 21 * u, dentro - 10 * u), 'medium', (255, 255, 255, 185)).poner(
+            T.contenido, cx, cy + (30 * u if texto else 0), 'centro')
+    _pintar(T.base, pista, (1.0, 1.0, 1.0), 0.13, ox, oy)
+    acento, claro = E['acento'], E['claro']
+    t0, t1 = 0.25 * R, 1.40 * R
+
+    def animar(capa, t):
         p = B.suave(B.tramo(t, t0, t1))
-        if p > 0:
-            largo_b = (bx1 - bx0) * p
-            fill = _cobertura(_sdf_caja(T.xx, T.yy, bx0 + largo_b / 2, by, max(largo_b / 2, bh / 2 * 0.999),
-                                        bh / 2, bh / 2))
-            _pintar(capa, fill, acento, min(1.0, p / 0.02))
+        if p <= 0.0:
+            return
+        A = p * 2 * math.pi
+        if p >= 0.9995:
+            d = d_aro
+            pos = ang / (2 * math.pi)
+        else:
+            sa, ca = math.sin(A), math.cos(A)
+            d0 = np.sqrt(dx * dx + (dy + Ra) ** 2)                       # la punta del principio
+            d1 = np.sqrt((dx - Ra * sa) ** 2 + (dy + Ra * ca) ** 2)      # la punta que avanza
+            en = ang <= A
+            d = np.where(en, d_aro, np.minimum(d0, d1))
+            pos = np.where(en, ang / max(A, 1e-4), np.where(d1 < d0, 1.0, 0.0))
+        cob = np.clip(g / 2 - d + 0.5, 0, 1).astype(np.float32) * min(1.0, p / 0.03)
+        # el brillo de debajo del trazo, que sube un poco al completarse
+        lleno = B.tramo(t, t1, t1 + 0.35)
+        brillo = 0.42 + 0.30 * math.sin(math.pi * lleno)
+        _pintar(capa, cv2.GaussianBlur(cob, (0, 0), 6 * u), acento, brillo, ox, oy)
+        _pintar(capa, cob, acento + (claro - acento) * pos[..., None], 1.0, ox, oy)
+
+    T.animar = animar
+    return T
+
+
+def _etiqueta(c, E):
+    """La marca: un círculo verde grande donde se dibuja la palomita, y el texto debajo."""
+    u, R = c.u, _ritmo(c)
+    texto = str(c.op.get('etiqueta') or '').strip()
+    if not texto:
+        return None
+    T = Tarjeta('etiqueta', 296 * u, 212 * u, 40 * u, u, detras=True)
+    pad = 30 * u
+    rt = Rotulo(texto, _tam_que_cabe(texto, 'bold', 32 * u, 168 * u), 'bold', BLANCO)
+    rt.poner(T.contenido, pad, 162 * u)
+    d = 76 * u
+    cx, cy = pad + d / 2, 30 * u + d / 2
+    lado = int(math.ceil(d * 1.25)) + 4
+    ox, oy = int(round(cx - lado / 2)), int(round(cy - lado / 2))
+    xx, yy = _rejilla(lado, lado)
+    radio = np.sqrt((xx + ox - cx) ** 2 + (yy + oy - cy) ** 2)
+    aro = np.clip(1.6 * u - np.abs(radio - (d / 2 - 1.6 * u)) + 0.5, 0, 1).astype(np.float32)
+    t_marca = 0.75 * R
+    cache = {}
+
+    def animar(capa, t):
+        dt = t - t_marca
+        if dt < 0.12:
+            _pintar(capa, aro, (1.0, 1.0, 1.0), 0.42 * (1 - B.tramo(dt, 0.0, 0.12)), ox, oy)
+        if dt <= 0:
+            return
+        q = round(B.sale(B.tramo(dt, 0.10, 0.40)) * 30) / 30          # la marca se dibuja (guardada por trozos)
+        dd = d * (0.4 + 0.6 * B.rebote(B.tramo(dt, 0, 0.30), 1.6))
+        clave = (q, round(dd * 4) / 4)
+        icono = cache.get(clave)
+        if icono is None:
+            if len(cache) > 120:
+                cache.clear()
+            icono = cache[clave] = _premult(_marca(dd, q))
+        _sobre(capa, icono, int(round(cx - icono.shape[1] / 2)), int(round(cy - icono.shape[0] / 2)),
+               B.tramo(dt, 0, 0.08))
+
+    T.animar = animar
+    return T
+
+
+def _pastilla(c, E):
+    """La pastilla de abajo: el texto (la última palabra en el color de acento) y un interruptor que se enciende."""
+    u, R = c.u, _ritmo(c)
+    texto = str(c.op.get('pastilla') or '').strip()
+    if not texto:
+        return None
+    antes, _, ultima = texto.rpartition(' ')
+    h = 96 * u
+    pista_w, pista_h = 80 * u, 46 * u
+    izq, hueco, der = 34 * u, 22 * u, 25 * u
+    tam = 31 * u
+    for _ in range(2):                                 # si es muy larga, más pequeña (cabe en 700 px)
+        r1 = Rotulo(antes + ' ', tam, 'medium', (255, 255, 255, 228)) if antes else None
+        r2 = Rotulo(ultima, tam, 'bold', E['claro8'])
+        ancho_txt = (r1.ancho if r1 else 0) + r2.ancho
+        sobra = izq + ancho_txt + hueco + pista_w + der - 700 * u
+        if sobra <= 0:
+            break
+        tam *= (ancho_txt - sobra) / ancho_txt
+    w = izq + ancho_txt + hueco + pista_w + der
+    T = Tarjeta('pastilla', w, h, h / 2, u)
+    x = izq
+    if r1:
+        r1.poner(T.contenido, x, T.h / 2)
+        x += r1.ancho
+    r2.poner(T.contenido, x, T.h / 2)
+    # el interruptor
+    px0 = T.w - der - pista_w
+    py0 = (T.h - pista_h) / 2
+    ox, oy = int(math.floor(px0)) - 2, int(math.floor(py0)) - 4
+    lw, lh = int(math.ceil(pista_w)) + 5, int(math.ceil(pista_h)) + 9
+    xx, yy = _rejilla(lw, lh)
+    xx, yy = xx + ox, yy + oy
+    pista = _cobertura(_sdf_caja(xx, yy, px0 + pista_w / 2, py0 + pista_h / 2, pista_w / 2, pista_h / 2, pista_h / 2))
+    rb = pista_h / 2 - 4 * u                                          # el radio de la bola
+    xa, xb = px0 + pista_h / 2, px0 + pista_w - pista_h / 2
+    yb = py0 + pista_h / 2
+    acento = E['acento']
+    t_on, d_on = 0.85 * R, 0.30 * R
+
+    def animar(capa, t):
+        q = _muelle(B.tramo(t, t_on, t_on + d_on * 1.6))                # la bola llega con un muelle corto
+        k = B.suave(B.tramo(t, t_on, t_on + d_on))                      # el color de la pista
+        col = np.array([1.0, 1.0, 1.0], np.float32) * (1 - k) + acento * k
+        _pintar(capa, pista, col, 0.20 + 0.80 * k, ox, oy)
+        bx = xa + (xb - xa) * q
+        d = np.sqrt((xx - bx) ** 2 + (yy - yb - 1.5 * u) ** 2)
+        sombra = np.clip((rb + 2.5 * u - d) / (4.0 * u), 0, 1).astype(np.float32)
+        _pintar(capa, sombra * sombra, (0.0, 0.0, 0.0), 0.28, ox, oy)
+        d = np.sqrt((xx - bx) ** 2 + (yy - yb) ** 2)
+        _pintar(capa, np.clip(rb - d + 0.5, 0, 1).astype(np.float32), (1.0, 1.0, 1.0), 1.0, ox, oy)
 
     T.animar = animar
     return T
@@ -628,32 +856,41 @@ def _preparar(c):
     claro = acento + (1.0 - acento) * 0.45
     E = {'acento': acento, 'claro': claro, 'acento8': (r, g, b, 255),
          'claro8': tuple(int(round(v * 255)) for v in claro) + (255,)}
-    hechas = [_contador(c, E), _creador(c, E), _anillo(c, E), _pastilla(c, E), _etiqueta(c, E), _editando(c, E)]
+    hechas = [_editando(c, E), _calendario(c, E), _contador(c, E), _creador(c, E), _anillo(c, E), _etiqueta(c, E),
+              _exportando(c, E), _pastilla(c, E)]
     # dónde va cada una: la colocación de referencia, movida con la cara si está muy arriba o muy abajo
     cy0 = float(c.cara[1])
-    desvio = cy0 - CARA_REFERENCIA_Y * u
+    desvio = cy0 - CARA_REFERENCIA[1] * u
     mover = math.copysign(max(0.0, abs(desvio) - 40 * u), desvio)
     mover = min(max(mover, -240 * u), 160 * u)
     tarjetas = []
     azar = np.random.default_rng(11)
+    ultimo = max(s['orden'] for s in SITIOS.values())
     for T in hechas:
         if T is None:
             continue
         T.cerrar()
         s = SITIOS[T.clave]
-        x = (s['der'] * u - T.w) if 'der' in s else s['x'] * u
+        if 'der' in s:
+            x = s['der'] * u - T.w
+        elif 'centro' in s:
+            x = s['centro'] * u - T.w / 2
+        else:
+            x = s['x'] * u
         y = s['y'] * u + mover
         T.cx0, T.cy0 = x + T.w / 2, y + T.h / 2
         T.t0 = s['orden'] * ESCALONADO
         T.orden = s['orden']
+        T.sale_antes = (ultimo - s['orden']) * 0.010            # se van en el orden en que llegaron
         T.detras = bool(s.get('detras'))
-        T.t_cruce = T.t0 + 0.38
+        T.t_cruce = T.t0 + 0.30
         # cada una flota a su manera (las de detrás, menos: están más lejos)
         k = 0.6 if T.detras else 1.0
-        T.flota = (k * azar.uniform(3.0, 4.5) * u, azar.uniform(3.8, 5.6), azar.uniform(0, 2 * math.pi),
-                   k * azar.uniform(5.5, 7.5) * u, azar.uniform(3.2, 4.6), azar.uniform(0, 2 * math.pi))
+        T.flota = (k * azar.uniform(3.0, 4.0) * u, azar.uniform(3.8, 5.6), azar.uniform(0, 2 * math.pi),
+                   k * azar.uniform(4.5, 6.5) * u, azar.uniform(3.2, 4.6), azar.uniform(0, 2 * math.pi))
         tarjetas.append(T)
     E['tarjetas'] = tarjetas
+    E['centro'] = (CARA_REFERENCIA[0] * u, CARA_REFERENCIA[1] * u + mover)
     c.estado['cristal'] = E
     return E
 
@@ -714,9 +951,13 @@ def _distancia(caja, x0, y0, x1, y1):
     return math.hypot(dx, dy), dx, dy
 
 
-def _apartar(c, caja, cx, cy, w, h):
-    """Si la tarjeta quedaría a menos de 0,6 anchos de cara, se aparta lo justo (hacia su lado, o hacia arriba si está
-    encima). Depende de la cara, que ya viene suavizada: se aparta sin tirones. Devuelve (cx, cy, cuánto se ve)."""
+def _apartar(c, caja, cx, cy, w, h, detras):
+    """Una de delante que quedaría a menos de 0,6 anchos de cara se aparta lo justo (hacia su lado, o hacia arriba si
+    está encima). Depende de la cara, que ya viene suavizada: se aparta sin tirones. Las de detrás no se apartan: la
+    persona va encima. Todas se quedan en la zona segura. Devuelve (cx, cy, cuánto se ve)."""
+    zx0, zx1 = B.zona_segura(c)
+    if detras:
+        return min(max(cx, zx0 + w / 2), zx1 - w / 2), cy, 1.0
     fx0, fy0, fx1, fy1, fw = caja
     m = MARGEN_CARA * fw
     d, dx, dy = _distancia(caja, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
@@ -727,7 +968,6 @@ def _apartar(c, caja, cx, cy, w, h):
         else:                                          # encima o debajo: se aparta hacia arriba o hacia abajo
             falta = math.sqrt(max(0.0, m * m - dx * dx)) - dy
             cy += -falta if cy < (fy0 + fy1) / 2 else falta
-    zx0, zx1 = B.zona_segura(c)
     cx = min(max(cx, zx0 + w / 2), zx1 - w / 2)
     d, _, _ = _distancia(caja, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
     # si ni así cabe (la cara se fue hacia el borde), se desvanece antes que taparla
@@ -736,7 +976,7 @@ def _apartar(c, caja, cx, cy, w, h):
 
 
 def _silueta(c, X0, Y0, X1, Y1):
-    """La silueta de la persona en el trozo X0..X1 × Y0..Y1, para lo que va DETRÁS de ella (la tarjeta de detrás y las
+    """La silueta de la persona en el trozo X0..X1 × Y0..Y1, para lo que va DETRÁS de ella (las tarjetas de detrás y las
     sombras), con los agujeritos sueltos tapados: un recorte imperfecto trae a veces un cuadradito vacío en mitad del
     brazo, y por ahí se vería la tarjeta. Solo se tapan los huecos pequeños y cerrados (rodeados de persona); los de
     verdad (el hueco entre el brazo y el cuerpo) son más grandes y se quedan. La silueta nunca se encoge: solo puede
@@ -763,28 +1003,53 @@ def _silueta(c, X0, Y0, X1, Y1):
     return np.maximum(m, hueco[Y0 - b0:Y1 - b0, X0 - a0:X1 - a0])
 
 
+def _sin_motas(F, sil, u, cuadro):
+    """Quita del filo de la persona lo claro y muy fino que no es suyo. `B.color_persona` ya quita la luz de la pared,
+    pero no lo que es más fino que su desenfoque: las letras blancas de un monitor pegado a la cabeza se quedaban en el
+    filo y, sobre el cristal oscuro, salían como una columna de puntitos claros junto a la gorra. Una apertura (el mínimo
+    y después el máximo en un cuadradito de ~3 px) borra lo claro más fino que eso y deja igual lo que cambia suave, que
+    es lo que da el borde nítido. Solo en el filo (donde la silueta no es ni 0 ni 1): la silueta no cambia (no se encoge
+    nada) y dentro de la persona no se toca nada. Fuera de la persona, `color_persona` deja el color medio de la persona
+    (oscuro): para la apertura, ahí va el cuadro tal cual (la pared), y así el filo pasa suave de oscuro a claro y la
+    apertura no lo oscurece (si no, la gorra salía con un borde oscuro borroso).
+    (Pintar todo el filo con el color de dentro también quitaba los puntitos, pero dejaba la gorra con un borde oscuro
+    borroso: el filo perdía la nitidez que trae el cuadro de verdad.)"""
+    banda = (sil > 0.002) & (sil < 0.97)
+    if not banda.any():
+        return F
+    r = max(1, int(round(1.5 * u)))
+    k = cv2.getStructuringElement(cv2.MORPH_RECT, (2 * r + 1, 2 * r + 1))
+    fuera = (sil <= 0.002)[..., None]
+    abierto = cv2.morphologyEx(np.where(fuera, cuadro, F).astype(np.float32), cv2.MORPH_OPEN, k)
+    out = F.copy()
+    out[banda] = abierto[banda]
+    return out
+
+
 # ── Cada cuadro ─────────────────────────────────────────────────────────────────────────────────────────────────────
 def dibujar(c):
     E = c.estado.get('cristal') or _preparar(c)
     u, t = c.u, c.t
     caja = _caja_cara(c)
+    hx, hy = E['centro']
     vivas = []
     for T in E['tarjetas']:
         e = B.tramo(t, T.t0, T.t0 + ENTRA)
         if e <= 0.0:
             continue
-        sal = B.tramo(c.queda - (5 - T.orden) * 0.010, 0, SALE)          # se van en el orden en que llegaron
+        sal = B.tramo(c.queda - T.sale_antes, 0, SALE)
         if sal <= 0.0:
             continue
         m = _muelle(e)
         va = _seno(sal)                                                   # 1 → 0 al irse
-        alfa = B.suave(B.tramo(t, T.t0, T.t0 + 0.30)) * va                # el filo, lo de dentro y la sombra
-        empano = B.suave(B.tramo(t, T.t0, T.t0 + 0.36)) * va              # cuánto cristal hay
-        esc = (0.86 + 0.14 * m) * (0.93 + 0.07 * va)
+        alfa = B.suave(B.tramo(t, T.t0, T.t0 + 0.22)) * va                # el filo, lo de dentro y la sombra
+        empano = B.suave(B.tramo(t, T.t0, T.t0 + 0.28)) * va              # cuánto cristal hay
+        esc = (0.78 + 0.22 * m) * (0.93 + 0.07 * va)
         ax, px, fx, ay, py, fy = T.flota
-        cx = T.cx0 + ax * math.sin(2 * math.pi * t / px + fx)
-        cy = T.cy0 + ay * math.sin(2 * math.pi * t / py + fy) + (1.0 - m) * 40 * u
-        cx, cy, se_ve = _apartar(c, caja, cx, cy, T.w * esc, T.h * esc)
+        # al entrar, sale de un poco más cerca de la cabeza (como de detrás de la persona) y llega con el muelle
+        cx = T.cx0 + ax * math.sin(2 * math.pi * t / px + fx) + (hx - T.cx0) * DESDE_DENTRO * (1.0 - m)
+        cy = T.cy0 + ay * math.sin(2 * math.pi * t / py + fy) + (hy - T.cy0) * DESDE_DENTRO * (1.0 - m)
+        cx, cy, se_ve = _apartar(c, caja, cx, cy, T.w * esc, T.h * esc, T.detras)
         alfa *= se_ve
         if alfa <= 0.003 and empano <= 0.003:
             continue
@@ -844,11 +1109,18 @@ def dibujar(c):
             cubre = np.maximum(a, capa[..., 3])
         if antes is not None:
             # la de detrás: la persona vuelve encima con el color limpio de su borde. Con el color tal cual, el borde
-            # trae la luz de la pared, y sobre el cristal oscuro sale como un filo de color alrededor del brazo.
+            # trae la luz de la pared, y sobre el cristal oscuro sale como un filo de color alrededor de la cabeza. Y lo
+            # muy fino y claro que queda en el filo (las letras de un monitor), fuera (`_sin_motas`).
             sil = _silueta(c, X0, Y0, X1, Y1)
             if float(sil.max()) > 0.004:
                 F, _ = B.color_persona(antes, sil, c.u)
+                F = _sin_motas(F, sil, c.u, antes)
                 m3 = sil[..., None]
-                limpio = F * m3 + zona * (1.0 - m3)
                 w = np.clip(cubre, 0.0, 1.0)[..., None]
+                # la sombra de la persona sobre la tarjeta: sin ella, una oreja en penumbra (azulada por la luz de la
+                # pared) se funde con el cristal oscuro y parece que no está (Kevin, 26 oct: «la oreja se me pierde por
+                # detrás del fondo de la cápsula»). Suave, solo fuera de la persona y solo encima de la tarjeta
+                sombra = np.clip(cv2.GaussianBlur(sil, (0, 0), SOMBRA_PERSONA[1] * c.u) * 1.6, 0.0, 1.0) * (1.0 - sil)
+                zona *= 1.0 - SOMBRA_PERSONA[0] * sombra[..., None] * w
+                limpio = F * m3 + zona * (1.0 - m3)
                 zona[:] = antes + (limpio - antes) * w

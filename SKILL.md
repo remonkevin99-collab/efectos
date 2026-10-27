@@ -57,7 +57,8 @@ Aquí lo llamamos `PY efectos.py`.
        propio vídeo.
      - `grafico`: sus números de verdad (`datos`). Pregúntaselos; los de fábrica son de ejemplo.
      - `fondo`: su nombre y su cuenta (`nombre`, `usuario`) y su titular (`lineas`).
-     - `cristal`: su nombre y su cuenta, y lo que cuenta el contador (`numero`, `texto_numero`).
+     - `cristal`: su nombre y su cuenta, lo que cuenta el contador (`numero`, `texto_numero`) y el calendario (`dia`,
+       `fecha`, `evento`: el día que lo sube; o `fecha` vacía, y el calendario no sale).
      - Nunca te inventes cifras, nombres o resultados que la persona no te dio.
 4. **Revisa antes de hacer el vídeo.** Saca fotos de 2 o 3 momentos de cada efecto: el principio, la mitad y el final.
    ```
@@ -79,7 +80,8 @@ Aquí lo llamamos `PY efectos.py`.
 6. **Los cambios, con sus palabras.**
    - «más largo» o «más corto»: mueve `desde` y `hasta`.
    - «otro color»: la opción `color`, en hexadecimal (#FF3B30).
-   - «más grande» o «más rápido» en la órbita: `tamano` y `velocidad`.
+   - «más grande» o «más rápido» en la órbita: `tamano` y `velocidad`; «más separadas»: `radio`; «que se aceleren cuando
+     hago el gesto»: `acelera` con el segundo del gesto (míralo en los cuadros).
    - Lo que no tenga opción («más arriba», «la letra más gorda»): cada efecto es un archivo corto en `motor/efectos/`,
      con sus medidas arriba y comentadas. Cambia el número y dile qué cambiaste.
 
@@ -87,19 +89,19 @@ Aquí lo llamamos `PY efectos.py`.
 
 | Efecto | Qué hace | Dura | Opciones (y lo que traen) |
 |---|---|---|---|
-| `cristal` | Tarjetas de cristal flotan a su alrededor: un contador que sube, un aro con la resolución, «Editado por…», su nombre con su foto, una etiqueta que se marca y una tarjeta que pasa por detrás de su brazo | 3,5 s | `numero`=13, `texto_numero`=efectos, `resolucion`=4K, `fps`=30, `pastilla`, `nombre`, `usuario`, `etiqueta` (vacía = sin esa tarjeta), `color` |
+| `cristal` | 8 tarjetas grandes de cristal a su alrededor, varias por detrás (su cabeza y sus brazos pasan por delante): el número enorme, la barra de exportar, su ficha con su foto, un calendario, lo que se está editando, el anillo 4K, una marca que se dibuja y la pastilla de abajo | 3,5 s | `marca`, `numero`=13, `texto_numero`, `exportando`, `resolucion`=4K, `fps`=30, `nombre`, `usuario`, `dia`, `fecha`, `evento`, `editando_titulo`, `editando`, `etiqueta`, `pastilla`, `color` (un texto vacío quita su tarjeta) |
 | `fondo` | Le cambia el fondo entero: en blanco y negro, con un aro de luz, su titular, su nombre y un botón de Seguir que se pulsa | 3,5 s | `lineas` (`UNO.\|DOS.\|TRES.`), `nombre`, `usuario`, `color`, `boton`=si, `texto`, `texto_hecho`, `momento`, `lado`, `color_persona`=no, `letras`, `techo`=210 (250 si es para la portada) |
-| `orbita` | De 3 a 6 tarjetas con fotos giran alrededor de su cabeza: pasan por detrás y por delante, sin taparle la cara | 4 s | `imagenes` (carpeta), `cantidad`=5, `tamano`=300, `velocidad`=1 |
+| `orbita` | De 3 a 6 tarjetas con fotos giran alrededor de su cabeza: pasan por detrás y por delante, sin taparle la cara; empiezan pegadas y se abren, y si se pide se aceleran en el segundo de un gesto suyo | 4 s | `imagenes` (carpeta), `cantidad`=5, `tamano`=300, `velocidad`=1, `radio`=1.3, `radio_inicio`=1, `acelera` (segundos desde que empieza; vacío = nunca), `acelera_por`=3, `acelera_dura`=1.2 |
 | `grafico` | La pantalla se divide: arriba, un gráfico de barras con sus números; abajo, la persona, con la cabeza saliendo del corte | 3,5 s | `titulo` (`primera línea/segunda`), `datos` (`etiqueta:número\|…`), `unidad`=min (minutos: «3 h», «30 min»; vacía = números sueltos), `destacar`=ultima (o menor, mayor, un número, ninguna), `insignia`, `color` y `color_destacado` (`#abajo,#arriba`), `fondo`, `alto`=0.5, `zoom`=auto, `asoma`=120 |
 | `letrero-led` | Se apaga la luz y detrás de su cabeza se enciende un letrero de neón, letra a letra | 4 s | `texto`=SIN EDITOR, `color`=#FFA43A, `persona`=0.2 (cuánto se apaga también la persona: 0 = nada) |
-| `lista` | Una tarjeta de cristal con pasos que se marcan uno a uno | 6 s | `titulo`, `pasos` (`paso::dato\|paso::dato`), `marcas` (el segundo en que se marca cada paso: `1,2\|2\|3,1`), `color` |
+| `tier-list` | Una tabla de la S a la F, y lo suyo entra volando hasta su fila | 4,5 s | `titulo`, `filas` (`S:\|A:\|B:cosa, otra\|…`), `elemento`, `fila`=S, `color` |
+| `linea-tiempo` | Color de cine cálido, un título y una línea de edición que avanza | 5 s | `titulo`=EDITADO, `subtitulo`, `color` |
 | `edicion` | La pantalla se divide: arriba, el panel de edición (pasos que se marcan, línea de tiempo, 100 %); abajo, la persona | 3,5 s | `titulo` (`Claude/lo edita`), `pasos` (`paso::dato\|…`), `subtitulos` (`texto\|texto\|texto`), `color`, `fondo`, `alto`, `zoom`, `asoma` |
 | `palabra-detras` | Una palabra gigante detrás de su cabeza | 3 s | `texto`=EFECTOS, `color`=#FFFFFF |
 | `comentario` | Alguien comenta una palabra, le dan corazón y llega la respuesta | 6 s | `texto`=EFECTOS, `usuario`, `creador`, `respuesta`, `color` |
-| `linea-tiempo` | Color de cine cálido, un título y una línea de edición que avanza | 5 s | `titulo`=EDITADO, `subtitulo`, `color` |
+| `lista` | Una tarjeta con los pasos de una tarea que se van marcando uno a uno | 6 s | `titulo`, `pasos` (`paso::dato\|paso::dato`), `marcas` (el segundo en que se marca cada paso: `1,2\|2\|3,1`), `color`, `estilo`=notificacion (o progreso, cristal) |
 | `portada` | Le convierte en la portada de una revista, con el título detrás de la cabeza | 4 s | `titulo`, `numero`, `lineas` (`grande\|otra\|otra`), `color`, `lado` (izquierda, derecha o auto), `zoom`=1.2 |
 | `boton-seguir` | Aparece un botón de Seguir junto a su cara y alguien lo pulsa | 3 s | `texto`=Seguir, `texto_hecho`=Siguiendo, `color`, `momento` (el segundo, o `mitad`), `lado` |
-| `tier-list` | Una tabla de la S a la F, y lo suyo entra volando hasta su fila | 4,5 s | `titulo`, `filas` (`S:\|A:\|B:cosa, otra\|…`), `elemento`, `fila`=S, `color` |
 
 **Que la mano señale lo que sale**: si la persona señala arriba, a un lado o levanta el pulgar, mira los cuadros y pon
 el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del lado al que apunta).

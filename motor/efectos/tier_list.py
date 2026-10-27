@@ -27,7 +27,7 @@ OPCIONES = {
     'filas': 'S:|A:|B:Plantillas|C:Líneas de tiempo|D:Apps|F:A mano',   # «letra:cosa, otra cosa|…»
     'elemento': 'Claude',                                              # lo que entra volando
     'fila': 'S',                                                       # la fila donde aterriza
-    'color': '#8B5CF6',                                                # el color del elemento y del destello
+    'color': '#D97757',                                                # el color del elemento y del destello (el de Claude)
 }
 DURACION = 4.5
 

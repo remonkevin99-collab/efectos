@@ -40,29 +40,33 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 
 | | Efecto | Qué hace |
 |---|---|---|
-| 1 | `cristal` | Tarjetas de cristal flotan a tu alrededor: un contador, tu nombre, «sin editor» y una que pasa por detrás de tu brazo |
+| 1 | `cristal` | Ocho tarjetas de cristal a tu alrededor, algunas por detrás de ti: el contador, tu nombre, un calendario, lo que se está editando y «sin editor» |
 | 2 | `fondo` | Te cambia el fondo entero: en blanco y negro, con tu nombre, tu titular y un botón de Seguir que alguien pulsa |
-| 3 | `órbita` | Tus portadas giran a tu alrededor: pasan por detrás de ti y por delante |
+| 3 | `órbita` | Tus portadas giran a tu alrededor, por detrás de ti y por delante; se abren y se aceleran con tu gesto |
 | 4 | `gráfico` | La pantalla se divide: tus números en barras arriba y tú abajo, con la cabeza saliendo del corte |
 | 5 | `letrero-led` | Se apaga la luz y se enciende tu letrero detrás de ti, letra a letra |
-| 6 | `lista` | Una lista que se va marcando sola |
-| 7 | `edición` | La pantalla se divide: el panel de edición arriba (los pasos, la línea de tiempo y el 100 %) y tú abajo |
-| 8 | `palabra-detrás` | Una palabra gigante detrás de tu cabeza |
-| 9 | `comentario` | Un comentario que se escribe solo, le dan corazón y llega tu respuesta |
-| 10 | `línea-tiempo` | Color de cine y una línea de edición encima, con su título |
-| 11 | `portada` | Te conviertes en la portada de una revista |
-| 12 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
-| 13 | `tier-list` | Una tabla de la S a la F, y lo tuyo vuela hasta la S |
+| 6 | `tier-list` | Una tabla de la S a la F, y lo tuyo vuela hasta la S |
+| 7 | `línea-tiempo` | Color de cine y una línea de edición encima, con su título |
+| 8 | `edición` | La pantalla se divide: el panel de edición arriba (los pasos, la línea de tiempo y el 100 %) y tú abajo |
+| 9 | `palabra-detrás` | Una palabra gigante detrás de tu cabeza |
+| 10 | `comentario` | Un comentario que se escribe solo, le dan corazón y llega tu respuesta |
+| 11 | `lista` | Una lista que se va marcando sola |
+| 12 | `portada` | Te conviertes en la portada de una revista |
+| 13 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
 
-## Para que quede bien
+## Antes de grabarte
 
-- **Graba en vertical**, con espacio detrás de ti y, si puedes, sin una silla de respaldo alto: los efectos de «detrás
-  de ti» quedan más limpios.
-- **Ropa que se separe del fondo.**
-- **Sin HDR** (en el iPhone: Ajustes › Cámara › Formatos › Vídeo HDR, desactivado), o los colores salen lavados.
-- **¿4K?** Pídelo: «hazlo en 4K». Tarda más.
+Los efectos recortan tu silueta para poner cosas detrás de ti. Cuanto más fácil se lo pongas, más limpio queda.
 
----
+1. **En vertical y en 4K**, con el móvil fijo. En iPhone, el HDR apagado: Ajustes › Cámara › Formatos › Vídeo HDR.
+2. **De la cintura para arriba**, centrado y con un palmo de aire sobre la cabeza: ahí van los títulos y las tarjetas.
+3. **Detrás de ti, poco y lejos:** al menos un metro de espacio y nada pegado a tu cabeza ni a tus hombros.
+4. **Sin silla de respaldo alto:** mejor de pie o en un taburete.
+5. **La luz, de frente:** una luz fuerte justo detrás de ti te deja un borde brillante que se nota al recortarte.
+6. **Ropa que se separe del fondo.**
+7. **Las manos, lejos de la cara**, y 3 segundos quieto al empezar y al terminar.
+8. **Gestos que los efectos aprovechan:** señala arriba para el gráfico, a un lado para el botón de seguir, o haz como que
+   deslizas para que la órbita se acelere.
 
 ## Para Claude: cómo se instala
 
