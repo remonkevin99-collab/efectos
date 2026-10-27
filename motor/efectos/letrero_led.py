@@ -20,7 +20,7 @@ import base as B
 
 NOMBRE = 'letrero-led'
 DESCRIPCION = 'El cuarto se oscurece y detrás de tu cabeza se escribe, letra a letra, un letrero de neón'
-OPCIONES = {'texto': 'SIN EDITOR', 'color': '#FFA43A'}
+OPCIONES = {'texto': 'SIN EDITOR', 'color': '#FFA43A', 'persona': '0.2'}   # persona: cuánto baja su luz (0–1)
 DURACION = 4.0
 
 OSCURO = 0.60           # cuánto baja la luz del cuarto
@@ -146,16 +146,25 @@ def _preparar(c):
     return {'letras': letras, 'inicios': [PRIMERA + k * paso for k in range(n)], 'pared': pared, 'pared_y': py0}
 
 
-def _oscurecer(c, m, cuanto, tinte):
-    """Lo mismo que `B.oscurecer(c, cuanto, salvo_persona=True, tinte)`, en menos pasadas (es lo que más tarda de este
-    efecto: va sobre el cuadro entero). `m` es la máscara con el borde firme: lo que queda fuera se apaga entero, también
-    el filo de pared que el recorte deja pegado a la persona."""
+def _oscurecer(c, m, cuanto, tinte, baja_persona=0.0):
+    """Apaga el cuarto y deja a la persona con su luz. Solo se oscurece lo que el cuadro tiene de fondo: en el filo del
+    recorte, la parte de fondo de cada píxel (la persona va con su color de verdad, `base.color_persona`). Así no queda
+    un halo de pared clara alrededor de los hombros y el recorte no se encoge (no se come la cara ni los dedos)."""
     if cuanto <= 0.002:
         return
-    k = (1.0 - m) * np.float32(cuanto)                    # cuánto se apaga cada píxel (la persona, nada)
-    queda = 1.0 - k
-    cv2.multiply(c.img, cv2.merge([queda, queda, queda]), dst=c.img)
-    cv2.add(c.img, cv2.merge([k * np.float32(t) for t in tinte]), dst=c.img)
+    F, _ = B.color_persona(c.img, m, c.u)
+    m3 = m[..., None]
+    persona = F * m3
+    fondo = c.img - persona                                # lo que el cuadro tiene de fondo
+    np.maximum(fondo, 0, out=fondo)
+    queda = np.float32(1.0 - cuanto)
+    if baja_persona > 0.002:
+        # con la luz del cuarto apagada, la persona también baja un poco y pierde el tono de esa luz (el celeste de la
+        # pared en la piel): un poco más oscura y algo menos saturada
+        k = np.float32(baja_persona)
+        gris = persona.mean(axis=2, keepdims=True)
+        persona = (persona + (gris - persona) * (k * 0.8)) * (np.float32(1.0) - k)
+    c.img[:] = persona + fondo * queda + (np.float32(cuanto) * (1.0 - m3)) * np.array(tinte, np.float32)
 
 
 def _sumar(c, m, luz, x0, y0, k):
@@ -178,16 +187,14 @@ def dibujar(c):
     e = c.estado['letrero']
     entra = B.suave(B.tramo(c.t, 0, ENTRA))
     sale = B.suave(B.tramo(c.queda, 0, SALE))
-    # 0. el borde de la persona, limpio: un pelo hacia dentro y su filo con el tono de la persona (si no, al apagar el
-    #    cuarto queda un halo de pared clara alrededor de los hombros y los brazos)
+    # 1. el cuarto, a oscuras (la persona no): con el recorte tal cual, sin encogerlo
     cuanto = OSCURO * entra * sale
-    m = B.borde_firme(c.mascara, c.u)
-    if cuanto > 0.002:
-        limpia = B.sin_halo(c.img, m, c.u)
-        mm = m[..., None]
-        c.img[:] = limpia * mm + c.img * (1.0 - mm)
-    # 1. el cuarto, a oscuras (la persona no)
-    _oscurecer(c, m, cuanto, (0.012, 0.008, 0.03))
+    m = np.clip(c.mascara, 0, 1).astype(np.float32, copy=False)
+    try:
+        baja = max(0.0, min(1.0, float(str(c.op.get('persona', '0.2')).replace(',', '.'))))
+    except ValueError:
+        baja = 0.2
+    _oscurecer(c, m, cuanto, (0.012, 0.008, 0.03), baja * cuanto / max(OSCURO, 1e-3))
     # 2. cada letra con su arranque de neón
     niveles = [_arranque(c.t - t0, k) * sale for k, t0 in enumerate(e['inicios'])]
     for (luz, x0, y0), nivel in zip(e['letras'], niveles):

@@ -1,6 +1,6 @@
 ---
 name: efectos
-description: Pone efectos de edición a un vídeo vertical de alguien hablando a cámara (órbita de portadas, gráfico de barras en pantalla dividida, palabra gigante detrás de la cabeza, panel de edición en pantalla dividida, letrero LED, fondo nuevo con botón de seguir, comentario que se escribe solo, lista que se marca sola, línea de tiempo con color de cine, portada de revista, botón de seguir y tier list). Úsala cuando la persona escriba /efectos o te pida uno de estos efectos para su vídeo.
+description: Pone efectos de edición a un vídeo vertical de alguien hablando a cámara (tarjetas de cristal a su alrededor, órbita de portadas, gráfico de barras en pantalla dividida, palabra gigante detrás de la cabeza, panel de edición en pantalla dividida, letrero LED, fondo nuevo con botón de seguir, comentario que se escribe solo, lista que se marca sola, línea de tiempo con color de cine, portada de revista, botón de seguir y tier list). Úsala cuando la persona escriba /efectos o te pida uno de estos efectos para su vídeo.
 argument-hint: "[efecto] [del segundo X al Y]"
 ---
 
@@ -57,6 +57,7 @@ Aquí lo llamamos `PY efectos.py`.
        propio vídeo.
      - `grafico`: sus números de verdad (`datos`). Pregúntaselos; los de fábrica son de ejemplo.
      - `fondo`: su nombre y su cuenta (`nombre`, `usuario`) y su titular (`lineas`).
+     - `cristal`: su nombre y su cuenta, y lo que cuenta el contador (`numero`, `texto_numero`).
      - Nunca te inventes cifras, nombres o resultados que la persona no te dio.
 4. **Revisa antes de hacer el vídeo.** Saca fotos de 2 o 3 momentos de cada efecto: el principio, la mitad y el final.
    ```
@@ -82,18 +83,19 @@ Aquí lo llamamos `PY efectos.py`.
    - Lo que no tenga opción («más arriba», «la letra más gorda»): cada efecto es un archivo corto en `motor/efectos/`,
      con sus medidas arriba y comentadas. Cambia el número y dile qué cambiaste.
 
-## Los 12 efectos
+## Los 13 efectos
 
 | Efecto | Qué hace | Dura | Opciones (y lo que traen) |
 |---|---|---|---|
+| `cristal` | Tarjetas de cristal flotan a su alrededor: un contador que sube, un aro con la resolución, «Editado por…», su nombre con su foto, una etiqueta que se marca y una tarjeta que pasa por detrás de su brazo | 3,5 s | `numero`=13, `texto_numero`=efectos, `resolucion`=4K, `fps`=30, `pastilla`, `nombre`, `usuario`, `etiqueta` (vacía = sin esa tarjeta), `color` |
+| `fondo` | Le cambia el fondo entero: en blanco y negro, con un aro de luz, su titular, su nombre y un botón de Seguir que se pulsa | 3,5 s | `lineas` (`UNO.\|DOS.\|TRES.`), `nombre`, `usuario`, `color`, `boton`=si, `texto`, `texto_hecho`, `momento`, `lado`, `color_persona`=no, `letras`, `techo`=210 (250 si es para la portada) |
 | `orbita` | De 3 a 6 tarjetas con fotos giran alrededor de su cabeza: pasan por detrás y por delante, sin taparle la cara | 4 s | `imagenes` (carpeta), `cantidad`=5, `tamano`=300, `velocidad`=1 |
-| `grafico` | La pantalla se divide: arriba, un gráfico de barras con sus números; abajo, la persona, con la cabeza saliendo del corte | 3,5 s | `titulo` (`Mis {n} Reels/más vistos`), `datos` (`etiqueta:número\|…`), `destacar`=0, `color`, `color_destacado`, `fondo`, `alto`=0.5, `zoom`=auto, `asoma`=120 |
-| `palabra-detras` | Una palabra gigante detrás de su cabeza | 3 s | `texto`=EFECTOS, `color`=#FFFFFF |
-| `edicion` | La pantalla se divide: arriba, el panel de edición (pasos que se marcan, línea de tiempo, 100 %); abajo, la persona | 3,5 s | `titulo` (`Claude/lo edita`), `pasos` (`paso::dato\|…`), `subtitulos` (`texto\|texto\|texto`), `color`, `fondo`, `alto`, `zoom`, `asoma` |
-| `letrero-led` | Se apaga la luz y detrás de su cabeza se enciende un letrero de neón, letra a letra | 4 s | `texto`=SIN EDITOR, `color`=#FFA43A |
-| `fondo` | Le cambia el fondo entero: en blanco y negro, con un aro de luz, su titular, su nombre y un botón de Seguir que se pulsa | 3,5 s | `lineas` (`UNO.\|DOS.\|TRES.`), `nombre`, `usuario`, `color`, `boton`=si, `texto`, `texto_hecho`, `momento`, `lado`, `color_persona`=no, `letras` |
-| `comentario` | Alguien comenta una palabra, le dan corazón y llega la respuesta | 6 s | `texto`=EFECTOS, `usuario`, `creador`, `respuesta`, `color` |
+| `grafico` | La pantalla se divide: arriba, un gráfico de barras con sus números; abajo, la persona, con la cabeza saliendo del corte | 3,5 s | `titulo` (`primera línea/segunda`), `datos` (`etiqueta:número\|…`), `unidad`=min (minutos: «3 h», «30 min»; vacía = números sueltos), `destacar`=ultima (o menor, mayor, un número, ninguna), `insignia`, `color` y `color_destacado` (`#abajo,#arriba`), `fondo`, `alto`=0.5, `zoom`=auto, `asoma`=120 |
+| `letrero-led` | Se apaga la luz y detrás de su cabeza se enciende un letrero de neón, letra a letra | 4 s | `texto`=SIN EDITOR, `color`=#FFA43A, `persona`=0.2 (cuánto se apaga también la persona: 0 = nada) |
 | `lista` | Una tarjeta de cristal con pasos que se marcan uno a uno | 6 s | `titulo`, `pasos` (`paso::dato\|paso::dato`), `marcas` (el segundo en que se marca cada paso: `1,2\|2\|3,1`), `color` |
+| `edicion` | La pantalla se divide: arriba, el panel de edición (pasos que se marcan, línea de tiempo, 100 %); abajo, la persona | 3,5 s | `titulo` (`Claude/lo edita`), `pasos` (`paso::dato\|…`), `subtitulos` (`texto\|texto\|texto`), `color`, `fondo`, `alto`, `zoom`, `asoma` |
+| `palabra-detras` | Una palabra gigante detrás de su cabeza | 3 s | `texto`=EFECTOS, `color`=#FFFFFF |
+| `comentario` | Alguien comenta una palabra, le dan corazón y llega la respuesta | 6 s | `texto`=EFECTOS, `usuario`, `creador`, `respuesta`, `color` |
 | `linea-tiempo` | Color de cine cálido, un título y una línea de edición que avanza | 5 s | `titulo`=EDITADO, `subtitulo`, `color` |
 | `portada` | Le convierte en la portada de una revista, con el título detrás de la cabeza | 4 s | `titulo`, `numero`, `lineas` (`grande\|otra\|otra`), `color`, `lado` (izquierda, derecha o auto), `zoom`=1.2 |
 | `boton-seguir` | Aparece un botón de Seguir junto a su cara y alguien lo pulsa | 3 s | `texto`=Seguir, `texto_hecho`=Siguiendo, `color`, `momento` (el segundo, o `mitad`), `lado` |

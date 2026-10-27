@@ -237,9 +237,19 @@ def poner(c, capa, cx, cy, escala=1.0, giro=0.0, alfa=1.0, detras=False):
                                            resample=Image.BICUBIC).convert('RGBA')
     arr = np.asarray(hecha, dtype=np.float32) / 255.0
     al = arr[..., 3:4] * float(alfa)
-    if detras:
-        al = al * (1.0 - c.mascara[Y0:Y1, X0:X1, None])
     zona = c.img[Y0:Y1, X0:X1]
+    if detras:
+        m = c.mascara[Y0:Y1, X0:X1]
+        if m.max() > 0.004:
+            # detrás de la persona: donde está la capa, la persona (con su color de verdad en el filo, sin la pared ni
+            # la luz de la pared: `color_persona`) va encima de la capa. Si se dejara el píxel tal cual, quedaría un filo
+            # de la pared de detrás alrededor de la cabeza (Kevin, 26 oct 2026). Fuera de la capa, el cuadro no cambia.
+            m3 = m[..., None]
+            F, _ = color_persona(zona, m, c.u)
+            compuesto = m3 * F + (1.0 - m3) * arr[..., :3]
+            zona *= (1.0 - al)
+            zona += compuesto * al
+            return
     zona *= (1.0 - al)
     zona += arr[..., :3] * al
 
@@ -279,37 +289,47 @@ def imagenes_de(carpeta):
     return out
 
 
-# ── El borde de la persona, limpio ──────────────────────────────────────────────────────────────────────────────────
-# Para los efectos que cambian lo que hay alrededor de la persona (el fondo nuevo, apagar la luz del cuarto): el recorte
-# trae en su filo un poco del fondo de verdad, y al cambiar lo de alrededor ese filo se ve como un halo claro (la pared
-# alrededor de la oreja, del brazo). Se arregla en dos pasos: el borde, un poco hacia dentro y suave (`borde_firme`), y
-# los píxeles del filo con el color de la persona de justo al lado (`sin_halo`).
+# ── El color de la persona en su borde ──────────────────────────────────────────────────────────────────────────────
+# Para los efectos que cambian lo que hay alrededor de la persona (el fondo nuevo, apagar la luz del cuarto). En el filo
+# del recorte cada píxel es una mezcla de persona y fondo; si se cambia el fondo y ese píxel se deja tal cual, queda un
+# halo del fondo de verdad (la pared celeste alrededor de la oreja). NUNCA se arregla encogiendo el recorte: se come la
+# oreja, la cara y los dedos (Kevin, 26 oct 2026). Se arregla calculando el color de la persona en cada píxel del filo.
 
-def borde_firme(m, u, desde=0.5, hasta=0.9, suavizado=2.6):
-    """La máscara con el contorno alisado y un pelo hacia dentro: se desenfoca y se vuelve a cortar por encima de la
-    mitad (de `desde` a `hasta`). Quita los dientes del borde y deja fuera el filo del fondo de verdad. float32 0–1."""
+def color_persona(img, m, u, radios=(90, 6)):
+    """El color de verdad de la persona en cada píxel (también en el filo), con la fusión por desenfoque en dos pasadas
+    (una grande y otra pequeña): en cada píxel, la media de la persona de alrededor más la corrección que pide la mezcla
+    real del cuadro. No toca la máscara: el borde queda donde lo pone el recorte.
+    `img` H × W × 3 float32 0–1; `m` H × W 0–1. Devuelve (persona, fondo): los dos H × W × 3. La persona se compone con
+    `persona * m`; lo que el cuadro tiene de fondo es `img - persona * m`."""
     import cv2
-    mb = cv2.GaussianBlur(m.astype(np.float32, copy=False), (0, 0), suavizado * u)
-    mb -= np.float32(desde)
-    mb *= np.float32(1.0 / (hasta - desde))
-    np.clip(mb, 0, 1, out=mb)
-    return mb * mb * (np.float32(3.0) - np.float32(2.0) * mb)
+    a = np.clip(m.astype(np.float32, copy=False), 0.0, 1.0)
+    a3 = a[..., None]
+    F, Bf = img, img
+    for r in radios:
+        k = max(3, int(round(r * u)) | 1)
+        ba = cv2.blur(a, (k, k))[..., None]
+        bF = cv2.blur(F * a3, (k, k)) / (ba + np.float32(1e-5))
+        bB = cv2.blur(Bf * (1.0 - a3), (k, k)) / ((1.0 - ba) + np.float32(1e-5))
+        F = np.clip(bF + a3 * (img - a3 * bF - (1.0 - a3) * bB), 0.0, 1.0).astype(np.float32)
+        Bf = bB.astype(np.float32)
+    return _sin_luz_de_fondo(F, a, u), Bf
 
 
-def sin_halo(p, m, u, cierre=2.5, alcance=3.0, ancho=2.0):
-    """Los píxeles del filo de la persona toman el tono de la persona de justo al lado, no el suyo (que lleva mezclado
-    el fondo de verdad). `p` es la imagen (gris o color, float32), `m` la máscara. El núcleo se mete `cierre` px hacia
-    dentro para no coger nada del fondo. Fuera de la persona el resultado no vale: se mezcla siempre con la máscara."""
+def _sin_luz_de_fondo(F, a, u, ancho=2.0):
+    """La luz de la pared de detrás también ilumina el filo de la persona (el borde de la gorra o del brazo sale celeste
+    en una toma con la pared celeste): sobre un fondo nuevo eso se ve como un hilo de luz. En una franja de ~2 px por
+    dentro del borde, el color pasa a ser el de la persona de justo al lado (unos px más adentro). Solo con vecinos
+    cercanos: donde no hay persona cerca por dentro (un dedo muy fino), se deja como está (no se inventan colores)."""
     import cv2
-    nucleo = (m > 0.985).astype(np.uint8)
-    r = max(1, int(round(cierre * u)))
-    nucleo = cv2.erode(nucleo, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))).astype(np.float32)
-    s = alcance * u
-    peso = np.maximum(cv2.GaussianBlur(nucleo, (0, 0), s), np.float32(1e-3))
-    if p.ndim == 3:
-        vecino = cv2.GaussianBlur(p * nucleo[..., None], (0, 0), s) / peso[..., None]
-        dentro = cv2.GaussianBlur(nucleo, (0, 0), ancho * u)[..., None]
-    else:
-        vecino = cv2.GaussianBlur(p * nucleo, (0, 0), s) / peso
-        dentro = cv2.GaussianBlur(nucleo, (0, 0), ancho * u)
-    return vecino + (p - vecino) * dentro
+    r = max(1, int(round(ancho * u)))
+    dentro = (a > 0.98).astype(np.uint8)
+    nucleo = cv2.erode(dentro, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1)))
+    franja = (a > 0.02) & (nucleo == 0)
+    if not franja.any():
+        return F
+    n = nucleo.astype(np.float32)
+    s = 1.5 * r
+    peso = cv2.GaussianBlur(n, (0, 0), s)
+    vecino = cv2.GaussianBlur(F * n[..., None], (0, 0), s) / np.maximum(peso, np.float32(1e-6))[..., None]
+    k = np.clip((peso - 0.05) / 0.25, 0.0, 1.0) * franja           # solo si hay persona cerca por dentro
+    return F + (vecino - F) * k[..., None]

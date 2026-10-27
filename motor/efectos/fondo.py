@@ -27,7 +27,7 @@ from efectos import boton_seguir as bs
 NOMBRE = 'fondo'
 DESCRIPCION = 'Cambia el fondo entero: tú recortado en blanco y negro, un titular, tu nombre y un botón de seguir que se pulsa'
 OPCIONES = {
-    'lineas': 'UN CLIP.|12 EFECTOS.|SIN EDITOR.',  # el titular: líneas cortas separadas por «|» (blanca, de color, blanca…)
+    'lineas': 'UN CLIP.|13 EFECTOS.|SIN EDITOR.',  # el titular: líneas cortas separadas por «|» (blanca, de color, blanca…)
     'nombre': 'TU NOMBRE',                         # el nombre de la franja
     'usuario': '@tu_usuario',                      # la cuenta, debajo del nombre
     'color': '#8B5CF6',                            # el color de acento (el brillo, el aro, la franja y el botón)
@@ -38,6 +38,8 @@ OPCIONES = {
     'lado': 'auto',                                # el lado del botón: izquierda, derecha o auto (donde hay más sitio)
     'color_persona': 'no',                         # no = la persona en blanco y negro; si = con sus colores
     'letras': '',                                  # las letras gigantes del fondo (vacío = una palabra del nombre; no = sin)
+    'techo': '210',                                # dónde puede empezar el titular por arriba (en un vídeo de 1080 de ancho);
+                                                   # 250 para una portada: la cuadrícula del perfil corta hasta ahí
 }
 DURACION = 3.5
 
@@ -169,7 +171,7 @@ def _titular(c, lineas, acento, lado, cx, cy, an, arriba_cabeza):
     n = len(lineas)
     MAYUS, AIRE = 0.71, 0.25                                         # la altura de las mayúsculas y el aire entre líneas
     alto_por_punto = n * MAYUS + (n - 1) * AIRE
-    techo = 210 * u                                                  # lo de arriba lo tapa Instagram
+    techo = float(c.op.get('techo') or 210) * u                     # lo de arriba lo tapa Instagram
     # encima de la cabeza: hasta tres cuartos de la zona segura de ancho, y el alto hasta la cabeza
     tam_encima = min(124 * u, 0.76 * (der - izq) / largo, (arriba_cabeza - 36 * u - techo) / alto_por_punto)
     # al lado: el sitio entre la cabeza y el borde
@@ -328,29 +330,20 @@ def _preparar(c):
 
 
 # ── Cada cuadro ─────────────────────────────────────────────────────────────────────────────────────────────────────
-def _borde(m, u):
-    """La máscara con el contorno alisado, un pelo hacia dentro y con el filo suave (`base.borde_firme`): así desaparecen
-    los dientes del borde (donde detrás había una pantalla o una mesa) y no queda el filo claro del fondo de verdad
-    alrededor del pelo, la oreja y los hombros."""
-    return B.borde_firme(m, u)
-
-
-def _sin_halo(p, m, u):
-    """Los últimos píxeles del borde toman el tono de la persona de justo al lado (`base.sin_halo`)."""
-    return B.sin_halo(p, m, u)
-
-
 def _persona(c, m):
-    """La persona: en blanco y negro con más contraste (o con sus colores, algo más contrastados)."""
+    """La persona: en blanco y negro con más contraste (o con sus colores, algo más contrastados). Con su color de verdad
+    también en el filo del recorte (`base.color_persona`): así no queda el halo de la pared de detrás y el recorte no se
+    encoge (no se come la oreja ni los dedos)."""
+    F, _ = B.color_persona(c.img, m, c.u)
     if c.estado['color_persona']:
-        p = c.img * np.float32(1.08) - np.float32(0.08 * PIVOTE)
+        p = F * np.float32(1.08) - np.float32(0.08 * PIVOTE)
         np.clip(p, 0, 1, out=p)
-        return _sin_halo(p, m, c.u)
-    g = cv2.cvtColor(c.img, cv2.COLOR_RGB2GRAY)
+        return p
+    g = cv2.cvtColor(F, cv2.COLOR_RGB2GRAY)
     g *= np.float32(CONTRASTE)
     g -= np.float32(PIVOTE * (CONTRASTE - 1))
     np.clip(g, 0, 1, out=g)
-    return cv2.cvtColor(_sin_halo(g, m, c.u), cv2.COLOR_GRAY2RGB)
+    return cv2.cvtColor(g, cv2.COLOR_GRAY2RGB)
 
 
 def _fondo_nuevo(c):
@@ -481,7 +474,7 @@ def dibujar(c):
     if k_in <= 0 or vis <= 0:
         return
 
-    m = _borde(c.mascara, u)
+    m = np.clip(c.mascara, 0, 1).astype(np.float32, copy=False)    # el recorte tal cual: sin encogerlo
     persona = _persona(c, m)
     fondo = _fondo_nuevo(c)
     fuera = 1.0 - m

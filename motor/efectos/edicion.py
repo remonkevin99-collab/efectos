@@ -17,7 +17,7 @@ OPCIONES = {
     # lo de antes de «/» va gordo y blanco; lo de después, fino y lila (en la misma línea)
     'titulo': 'Claude / lo edita',
     # cada paso separado por «|»; lo que va tras «::» es el resultado, que sale a la derecha al marcarse
-    'pasos': 'corte::sin pausas|subtítulos::palabra a palabra|color::cálido|efectos::12 listos|sonido::golpes suaves',
+    'pasos': 'corte::sin pausas|subtítulos::palabra a palabra|color::cálido|efectos::13 listos|sonido::golpes suaves',
     # las palabras de las pastillas de la pista de subtítulos, separadas por «|»
     'subtitulos': 'grabo una vez|y el resto|se hace solo',
     # el color de acento (la barra de progreso y el círculo que gira)

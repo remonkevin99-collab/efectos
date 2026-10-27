@@ -9,8 +9,9 @@ La cara nunca queda tapada: el clip se coloca para que lo más alto de la cabeza
 tarjeta, y lo que es persona por encima del borde se pinta delante del panel (el fondo del clip, nunca).
 
 Los dos paneles:
-- grafico: barras sobre un panel claro con cuadrícula fina. Crecen una detrás de otra y el número de encima va contando
-  («1 M», «243 mil», «9,9 mil»). Una barra va destacada con otro color y un brillo suave.
+- grafico: barras sobre un panel oscuro (índigo y violeta, con luces magenta, una cuadrícula muy tenue y brillo de
+  cristal). Crecen una detrás de otra con un degradado de violeta a rosa y el número de encima va contando («4 h»,
+  «1 h 30 min», o «243 mil» sin unidad). La destacada va en dorado con un halo y una insignia que la señala.
 - edicion: un panel oscuro de «editando»: el clip en pequeño con su código de tiempo, los pasos que se van marcando, las
   pistas (toma, subtítulos, color y sonido) con un cabezal que avanza y una barra de progreso que acaba en 100 %.
 """
@@ -40,12 +41,10 @@ HUECO = 22               # entre el panel y la tarjeta
 ABAJO = 40               # de la tarjeta al borde de abajo
 R_PANEL, R_TARJETA = 36, 40
 CARA_OBJETIVO = 215      # el ancho de la cara dentro de la tarjeta con zoom=auto
+SOLAPE = 4               # cuánto baja la cabeza que sale por dentro de la tarjeta (tapa el filo del borde)
 
-TINTA = (28, 21, 55)          # #1C1537
-GRIS = (91, 86, 112)          # #5B5670
 MORADO = (124, 58, 237)       # #7C3AED
 MORADO_HONDO = (46, 16, 101)  # #2E1065
-LILA = (221, 214, 254)        # #DDD6FE
 LILA_VIVO = (196, 181, 253)   # #C4B5FD
 AMARILLO = (250, 204, 21)     # #FACC15
 AMBAR = (245, 158, 11)        # #F59E0B
@@ -377,12 +376,6 @@ def capa_cifra(num, unidad, tam, peso, col_num, col_uni):
     return im, pad, pad + asc, ancho
 
 
-def ancho_cifra(num, unidad, peso):
-    """Lo que ocupa a lo ancho una cifra (capa_cifra) a tamaño 1."""
-    f1, f2 = B.fuente(peso, 100), B.fuente('medium', 60)
-    return (f1.getlength(num) + (14 + f2.getlength(unidad) if unidad else 0)) / 100.0
-
-
 # ── Dónde va cada cosa (se calcula una vez) ─────────────────────────────────────────────────────────────────────────
 def _coronilla(c):
     """Lo más alto de la cabeza, en el cuadro: la primera fila en la que la persona llena la franja de la cara (una gorra o
@@ -400,10 +393,13 @@ def _coronilla(c):
 
 def _fondo(c, spec, oscuro):
     """El fondo de detrás: un degradado suave en diagonal, calculado con decimales y un poquito de grano fijo para que
-    no se vean escalones al guardarlo en 8 bits."""
+    no se vean escalones al guardarlo en 8 bits. El «auto» oscuro (el del gráfico) va de índigo hondo a casi negro, con
+    una luz magenta muy suave arriba a la derecha."""
     spec = str(spec or 'auto').strip()
+    luz = False
     if spec.lower() in ('', 'auto'):
-        a, b = ((76, 29, 149), (29, 15, 61)) if oscuro else ((246, 243, 255), (221, 214, 254))
+        a, b = ((32, 14, 70), (8, 6, 22)) if oscuro else ((246, 243, 255), (221, 214, 254))
+        luz = oscuro
     elif ',' in spec:
         x, y = spec.split(',')[:2]
         a, b = B.color(x)[:3], B.color(y)[:3]
@@ -419,6 +415,9 @@ def _fondo(c, spec, oscuro):
     g = 0.68 * (1 - ys)[:, None] + 0.32 * xs[None, :]        # 1 arriba a la derecha, 0 abajo a la izquierda
     g = g * g * (3 - 2 * g)
     img = b + (a - b) * g[..., None]
+    if luz:
+        k = 0.24 * np.exp(-(((xs[None, :] - 0.92) / 0.55) ** 2 + ((ys[:, None] - 0.0) / 0.32) ** 2))
+        img = 1 - (1 - img) * (1 - (np.float32([217, 70, 239]) / 255.0) * k[..., None])
     rng = np.random.default_rng(11)
     img += (rng.random((H, W, 1), dtype=np.float32) - 0.5) * (1.0 / 255.0)
     return img
@@ -495,16 +494,20 @@ def dibujar(c, tipo):
     def matriz(X0, Y0):
         return np.float32([[s, 0, tx - X0], [0, s, ty - Y0]])
 
-    # 1. lo que de la persona queda por encima del borde de la tarjeta (eso se pinta delante del panel)
+    # 1. lo que de la persona queda por encima del borde de la tarjeta (eso se pinta delante del panel). Baja `SOLAPE` px
+    #    por DENTRO de la tarjeta: así la cabeza tapa también el filo del borde (sin eso, en la fila del borde la persona
+    #    y la tarjeta quedaban a medias y se colaba el fondo: una raya que cruzaba la gorra). Dentro de la tarjeta el clip
+    #    es el mismo, así que el solape no se ve.
     sale_arriba = None
+    solape = SOLAPE * u
     ya = max(0, int(math.floor(ry0)))
     z0 = max(0, int(math.floor(ry0 - L['zona'] * min(1.0, p))))
-    z1 = min(H, int(math.ceil(ry0)) + 2)
+    z1 = min(H, int(math.ceil(ry0 + solape + 2 * u)) + 1)
     if z1 > z0 + 1:
         M = cv2.warpAffine(c.mascara, matriz(xa, z0), (xb - xa, z1 - z0), flags=cv2.INTER_LINEAR,
                            borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         ys = np.arange(z0, z1, dtype=np.float32) + 0.5
-        arriba = np.clip((ry0 - ys) / (2 * u) + 0.5, 0, 1)          # 1 por encima del borde, 0 por debajo (suave)
+        arriba = np.clip((ry0 + solape - ys) / (2 * u) + 0.5, 0, 1)  # 1 hasta el solape, 0 más abajo (suave)
         xs = np.arange(xa, xb, dtype=np.float32) + 0.5
         dentro = np.clip(np.minimum(xs - rx0, rx1 - xs) + 0.5, 0, 1)
         M *= arriba[:, None]
@@ -572,10 +575,21 @@ def dibujar(c, tipo):
         A = np.zeros((iy0 - ya, xb - xa), np.float32)
         if iy0 > ra:
             A[ra - ya:] = R[:iy0 - ra]
+        banda = clip[:iy0 - ya]
         if sale_arriba is not None:
             n = len(sale_arriba)
             np.maximum(A[:n], sale_arriba, out=A[:n])
-        mezclar_en(c.img[ya:iy0, xa:xb], clip[:iy0 - ya], A)
+            # la cabeza que sale va con su color de verdad en el filo (`base.color_persona`): si no, el fondo de la toma
+            # deja un filo de pared alrededor de la gorra encima del panel. Dentro de la tarjeta, el clip tal cual.
+            Mb = cv2.warpAffine(c.mascara, matriz(xa, ya), (xb - xa, iy0 - ya), flags=cv2.INTER_LINEAR,
+                                borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            Fb, _ = B.color_persona(banda, Mb, u)
+            Rb = np.zeros_like(A)
+            if iy0 > ra:
+                Rb[ra - ya:] = R[:iy0 - ra]
+            Rb = Rb[..., None]
+            banda = banda * Rb + Fb * (1.0 - Rb)
+        mezclar_en(c.img[ya:iy0, xa:xb], banda, A)
     if iy1 > iy0:                                           # el medio: los dos bordes se mezclan, el centro se copia
         if ix0 > xa:
             mezclar_en(c.img[iy0:iy1, xa:ix0], clip[iy0 - ya:iy1 - ya, :ix0 - xa], R[iy0 - ra:iy1 - ra, :ix0 - xa])
@@ -588,6 +602,17 @@ def dibujar(c, tipo):
 
 
 # ── Panel 1: el gráfico de barras ───────────────────────────────────────────────────────────────────────────────────
+INDIGO = (79, 70, 229)        # #4F46E5
+FUCSIA = (217, 70, 239)       # #D946EF
+ROSA = (244, 114, 182)        # #F472B6
+LILA_CLARO = (216, 180, 254)  # #D8B4FE
+ORO = (252, 211, 77)          # #FCD34D
+NARANJA = (251, 146, 60)      # #FB923C
+TINTA_HONDA = (40, 14, 70)    # el texto sobre la insignia dorada
+UNI, ESP_UNI, ESP_TROZO = 0.55, 0.1, 0.24   # en las cifras: la unidad (en proporción al número) y los espacios
+HUECO_BARRAS, LADO_BARRAS = 0.6, 0.12       # el hueco entre barras y el margen a los lados, en anchos de barra
+
+
 def leer_datos(s):
     """«etiqueta:número|…» → [(etiqueta, número)]."""
     out = []
@@ -601,6 +626,61 @@ def leer_datos(s):
         except ValueError:
             continue
     return out or [('A', 3.0), ('B', 2.0), ('C', 1.0)]
+
+
+def tiempo(v):
+    """Minutos como se leen en español, en trozos (número, unidad): 240 → «4 h», 90 → «1 h 30 min», 45 → «45 min»,
+    0,5 → «30 s». De un minuto para arriba va en minutos enteros."""
+    v = max(0.0, float(v))
+    if v * 60 < 59.5:
+        return [(f'{v * 60:.0f}', 's')]
+    h, m = divmod(int(round(v)), 60)
+    out = [(str(h), 'h')] if h else []
+    if m or not h:
+        out.append((str(m), 'min'))
+    return out
+
+
+def trozos_de(v, unidad):
+    """Un valor en trozos (número, unidad): con unidad «min», como tiempo(); sin unidad, como cifra() («243 mil»)."""
+    return tiempo(v) if unidad == 'min' else [cifra(v)]
+
+
+def capa_trozos(trozos, tam, peso, col_num, col_uni):
+    """Los trozos («1» «h» «30» «min») en una capa sobre la misma línea de base: el número grande y la unidad pequeña.
+    Devuelve (capa, x de la tinta, y de la línea de base, ancho de la tinta)."""
+    f1, f2 = B.fuente(peso, tam), B.fuente('medium', tam * UNI)
+    piezas, x = [], 0.0
+    for k, (num, uni) in enumerate(trozos):
+        if k:
+            x += tam * ESP_TROZO
+        piezas.append((x, num, f1, col_num))
+        x += f1.getlength(num)
+        if uni:
+            x += tam * ESP_UNI
+            piezas.append((x, uni, f2, col_uni))
+            x += f2.getlength(uni)
+    asc, desc = f1.getmetrics()
+    pad = int(math.ceil(tam * 0.12))
+    im = Image.new('RGBA', (int(math.ceil(x)) + 2 * pad, asc + desc + 2 * pad), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for x0, s, f, col in piezas:
+        d.text((pad + x0, pad + asc), s, font=f, fill=col, anchor='ls')
+    return im, pad, pad + asc, x
+
+
+def ancho_trozos(trozos, peso, tabular=False):
+    """Lo que ocupa a lo ancho capa_trozos a tamaño 1. `tabular`: como si todas las cifras fueran igual de anchas (las
+    de Poppins no lo son: un «1» es mucho más estrecho que un «0»)."""
+    f1, f2 = B.fuente(peso, 100), B.fuente('medium', 100 * UNI)
+    x = 0.0
+    for k, (num, uni) in enumerate(trozos):
+        if tabular:
+            ancho_num = sum(f1.getlength('0') if ch.isdigit() else f1.getlength(ch) for ch in num)
+        else:
+            ancho_num = f1.getlength(num)
+        x += (100 * ESP_TROZO if k else 0) + ancho_num + (100 * ESP_UNI + f2.getlength(uni) if uni else 0)
+    return x / 100.0
 
 
 def _partir(s, largo):
@@ -617,30 +697,150 @@ def _partir(s, largo):
     return mejor
 
 
-def _cuadricula(pw, ph, u, base, linea, paso):
-    """El fondo del panel claro: casi blanco con una cuadrícula fina."""
-    rgb = np.empty((ph, pw, 3), np.float32)
-    rgb[:] = np.asarray(base, np.float32) / 255.0
-    g = 1.3 * u
+def _dos_colores(spec, defecto):
+    """«#abajo,#arriba» → los dos colores del degradado (de 0 a 1). Con un solo color, abajo va algo más hondo y arriba
+    más claro."""
+    try:
+        cols = [np.asarray(B.color(x)[:3], np.float32) / 255 for x in str(spec or defecto).split(',')[:2] if x.strip()]
+    except ValueError:
+        cols = []
+    if not cols:
+        return _dos_colores(defecto, defecto)
+    if len(cols) == 1:
+        return cols[0] * 0.8, cols[0] + (1 - cols[0]) * 0.35
+    return cols[0], cols[1]
+
+
+def _que_destacar(spec, datos):
+    """Qué barra va destacada: «ultima» (la de fábrica), «menor», «mayor», un número (0 = la primera) o «ninguna»/-1."""
+    s = str(spec if spec is not None else 'ultima').strip().lower()
+    n = len(datos)
+    if s in ('ultima', 'última', 'ultimo', 'último', 'last'):
+        return n - 1
+    if s in ('menor', 'minimo', 'mínimo', 'min'):
+        return min(range(n), key=lambda i: datos[i][1])
+    if s in ('mayor', 'maximo', 'máximo', 'max'):
+        return max(range(n), key=lambda i: datos[i][1])
+    d = int(numero(s, -1))
+    return d if 0 <= d < n else -1
+
+
+def _grano(forma, semilla):
+    """Medio nivel de grano fijo (de un vídeo de 8 bits): los degradados no hacen escalones al guardarse."""
+    return (np.random.default_rng(semilla).random(forma, dtype=np.float32) - 0.5) * np.float32(1.0 / 255.0)
+
+
+def _pantalla(rgb, col, k):
+    """Mezcla en modo «pantalla» (aclara como una luz): rgb ← 1 − (1 − rgb)·(1 − col·k). k: alto × ancho."""
+    rgb[:] = 1 - (1 - rgb) * (1 - (np.asarray(col, np.float32) / 255.0) * k[..., None])
+
+
+def _panel_grafico(pw, ph, u):
+    """El fondo del panel: un degradado hondo (índigo arriba, violeta abajo) con luces suaves (violeta arriba a la
+    izquierda, magenta abajo a la derecha), una cuadrícula muy tenue, un reflejo de cristal en diagonal y un filo de luz.
+    Todo con decimales y con grano fijo. → (rgb ya multiplicado por su transparencia, transparencia)."""
+    X = (np.arange(pw, dtype=np.float32) + 0.5)[None, :]
+    Y = (np.arange(ph, dtype=np.float32) + 0.5)[:, None]
+    x, y = X / pw, Y / ph
+    k = (y * y * (3 - 2 * y))[..., None]
+    arriba, abajo = np.float32([19, 12, 46]) / 255, np.float32([25, 9, 50]) / 255
+    rgb = np.repeat(arriba + (abajo - arriba) * k, pw, axis=1)
+
+    def luz(cx, cy, rx, ry, col, fuerza):
+        _pantalla(rgb, col, fuerza * np.exp(-(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2)))
+    luz(0.06, -0.10, 0.72, 0.60, MORADO, 0.38)
+    luz(0.98, 1.10, 0.60, 0.52, FUCSIA, 0.32)
+    luz(0.45, 0.50, 0.55, 0.45, INDIGO, 0.08)
+
+    # la cuadrícula, muy tenue (algo más arriba que abajo)
+    paso, g = 54 * u, 1.2 * u
 
     def perfil(n):
-        x = np.arange(n, dtype=np.float32) + 0.5
-        d = np.abs(((x - paso / 2) % paso) - paso / 2)       # la distancia a la línea más cercana
+        t = np.arange(n, dtype=np.float32) + 0.5
+        d = np.abs(((t - paso / 2) % paso) - paso / 2)
         return np.clip(g / 2 + 0.5 - d, 0, 1)
-    a = np.maximum(perfil(ph)[:, None], perfil(pw)[None, :])[..., None]
-    rgb += (np.asarray(linea, np.float32) / 255.0 - rgb) * a
-    return rgb
+    rejilla = np.maximum(perfil(ph)[:, None], perfil(pw)[None, :]) * (0.05 - 0.022 * y)
+    rgb += (1 - rgb) * rejilla[..., None]
+
+    # el reflejo del cristal: una banda en diagonal muy suave y un poco más de luz arriba del todo
+    d = (X + 0.9 * Y) / (pw + 0.9 * ph)
+    _pantalla(rgb, (255, 255, 255), 0.05 * np.exp(-((d - 0.30) / 0.11) ** 2) + 0.045 * (1 - y) ** 5)
+
+    # el filo de luz del borde (más claro arriba)
+    A = alfa_caja(0, 0, pw, ph, R_PANEL * u, 0, 0, pw, ph)
+    e = 1.6 * u
+    filo = A - alfa_caja(e, e, pw - e, ph - e, R_PANEL * u - e, 0, 0, pw, ph)
+    rgb += (np.float32([0.93, 0.89, 1.0]) - rgb) * (filo * (0.36 - 0.26 * y))[..., None]
+
+    rgb += _grano((ph, pw, 1), 7)
+    A = A[..., None]
+    rgb *= A
+    return rgb, A
 
 
-def _capa_barra(bw, alto, r, color):
-    """Una barra con las esquinas de arriba redondas y un degradado suave (más clara arriba). → (rgbp, a)"""
+def _capa_barra(bw, alto, r, abajo, arriba, u, semilla):
+    """Una barra con las esquinas de arriba redondas y un degradado vertical (de `abajo` a `arriba`), con su brillo de
+    cristal: una franja de luz a la izquierda, el canto derecho algo más hondo y un filo claro arriba. → (rgbp, a)"""
     alto = max(1, int(round(alto)))
-    forma = np.asarray(B.caja(bw, alto + r + 1, r, (255, 255, 255, 255)).split()[3], np.float32)[:alto, :, None] / 255.0
-    base = np.asarray(color, np.float32)[:3] / 255.0
-    arriba, abajo = base + (1 - base) * 0.16, base * 0.93
-    k = np.linspace(0, 1, alto, dtype=np.float32)[:, None, None]
-    col = arriba + (abajo - arriba) * k
-    return np.ascontiguousarray(col * forma), np.ascontiguousarray(forma)
+    a = alfa_caja(0, 0, bw, alto + r + 2, r, 0, 0, bw, alto)      # la caja sigue por debajo: abajo queda recta
+    yy = (np.arange(alto, dtype=np.float32) + 0.5)[:, None]
+    xx = (np.arange(bw, dtype=np.float32) + 0.5)[None, :] / bw
+    k = (1 - yy / alto)[..., None]
+    col = np.repeat(abajo + (arriba - abajo) * k, bw, axis=1)
+    _pantalla(col, (255, 255, 255), np.broadcast_to(0.24 * np.exp(-((xx - 0.26) / 0.12) ** 2), (alto, bw)))
+    col *= (1 - 0.2 * np.clip((xx - 0.7) / 0.3, 0, 1) ** 1.5)[..., None]
+    _pantalla(col, (255, 255, 255), np.broadcast_to(0.32 * np.exp(-yy / (4 * u)), (alto, bw)))
+    col += _grano((alto, bw, 1), semilla)
+    a = a[..., None]
+    return np.ascontiguousarray(np.clip(col, 0, 1) * a), np.ascontiguousarray(a)
+
+
+def _degradar(capa_, c0, c1):
+    """Un texto (capa RGBA) pintado con un degradado de izquierda (c0) a derecha (c1)."""
+    arr = np.asarray(capa_, np.float32)
+    w = arr.shape[1]
+    k = np.linspace(0, 1, w, dtype=np.float32)[None, :, None]
+    col = np.asarray(c0, np.float32) + (np.asarray(c1, np.float32) - np.asarray(c0, np.float32)) * k
+    out = np.concatenate([np.broadcast_to(col, arr.shape[:2] + (3,)), arr[..., 3:4]], axis=2)
+    return Image.fromarray(np.clip(out + 0.5, 0, 255).astype(np.uint8), 'RGBA')
+
+
+def _trazo(ancho, grosor, col, u):
+    """El subrayado de rotulador: una pincelada que se afina en las puntas y sube un pelín hacia la derecha."""
+    k = SS
+    pad = grosor
+    W, H = int(math.ceil(ancho + 2 * pad)), int(math.ceil(grosor * 2.6 + 2 * pad))
+    im = Image.new('RGBA', (W * k, H * k), (0, 0, 0, 0))
+    n = 60
+    arriba_, abajo_ = [], []
+    for i in range(n + 1):
+        t = i / n
+        x = pad + t * ancho
+        yc = pad + grosor * 1.3 - grosor * 0.55 * t + grosor * 0.18 * math.sin(t * math.pi * 1.6)
+        g = grosor * (0.35 + 0.65 * math.sin(math.pi * min(1.0, t / 0.12) / 2) * math.sin(
+            math.pi * min(1.0, (1 - t) / 0.2) / 2))
+        arriba_.append((x * k, (yc - g / 2) * k))
+        abajo_.append((x * k, (yc + g / 2) * k))
+    ImageDraw.Draw(im).polygon(arriba_ + abajo_[::-1], fill=col)
+    return im.resize((W, H), Image.LANCZOS), pad, pad + grosor * 1.3
+
+
+def _insignia(texto_, tam, u):
+    """La pastilla dorada que señala la barra destacada, con su piquito abajo. → (capa, alto hasta la punta)"""
+    rt = Rotulo(texto_, tam, 'bold', TINTA_HONDA + (255,))
+    h = int(round(tam * 1.85))
+    w = int(round(rt.ancho + tam * 1.3))
+    pico = int(round(tam * 0.42))
+    k = SS
+    im = Image.new('RGBA', (w * k, (h + pico) * k), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, w * k - 1, h * k - 1], radius=h * k / 2, fill=ORO + (255,))
+    cx = w * k / 2
+    d.polygon([(cx - pico * 1.1 * k, h * k - 2 * k), (cx + pico * 1.1 * k, h * k - 2 * k), (cx, (h + pico) * k - 1)],
+              fill=ORO + (255,))
+    im = im.resize((w, h + pico), Image.LANCZOS)
+    im.alpha_composite(rt.capa, rt.esquina(w / 2, h / 2, 'centro'))
+    return im
 
 
 def _preparar_grafico(c, L, asoma):
@@ -648,56 +848,72 @@ def _preparar_grafico(c, L, asoma):
     pw, ph = L['pw'], L['ph']
     datos = leer_datos(op.get('datos'))
     n = len(datos)
-    PAD, ARRIBA = 40 * u, 38 * u
-    d = int(numero(op.get('destacar'), 0))
-    L['dest'] = d if 0 <= d < n else -1
-    col = B.color(op.get('color') or '#8B5CF6')
-    col_d = B.color(op.get('color_destacado') or '#FACC15')
-    titulo = str(op.get('titulo') or 'Mis {n} Reels / más vistos').replace('{n}', str(n))
+    unidad = str(op.get('unidad') or '').strip().lower()
+    unidad = 'min' if unidad in ('min', 'mins', 'minuto', 'minutos') else ''
+    L['unidad'] = unidad
+    PAD, ARRIBA = 46 * u, 46 * u
+    L['dest'] = dest = _que_destacar(op.get('destacar'), datos)
+    abajo, arriba = _dos_colores(op.get('color'), '#6D28D9,#EC4899')
+    abajo_d, arriba_d = _dos_colores(op.get('color_destacado'), '#F97316,#FDE68A')
+    titulo = str(op.get('titulo') or '').replace('{n}', str(n))
     t1, _, t2 = titulo.partition('/')
     t1, t2 = t1.strip(), t2.strip()
 
     util = pw - 2 * PAD
-    slot = util / n
     vmax = max(v for _, v in datos) or 1.0
     fr = [v / vmax for _, v in datos]
 
-    # los números: el mismo tamaño para todos (el que quepa), y el destacado algo más grande
-    finales = [cifra(v) for _, v in datos]
-    anchos = [ancho_cifra(a, b, 'bold') for a, b in finales]
-    tam_num = min(38 * u, min((slot - 8 * u) / max(w, 1e-3) for w in anchos))
+    # a lo ancho: las barras, todas iguales y juntas en el centro; el hueco entre dos es el 60 % de una barra y a los
+    # lados queda un 12 %. Con pocas barras salen anchas (con 2, unos 310 px a 1080) y sin huecos grandes a los lados
+    bw = int(round(min(util / (n + (n - 1) * HUECO_BARRAS + 2 * LADO_BARRAS), 340 * u)))
+    hueco_b = HUECO_BARRAS * bw
+    x_ini = PAD + (util - n * bw - (n - 1) * hueco_b) / 2
+    cxs = [x_ini + bw / 2 + i * (bw + hueco_b) for i in range(n)]
+    celda = bw + hueco_b if n > 1 else util                # lo que pueden ocupar a lo ancho su número y su etiqueta
+    pocas = n <= 3                                         # con pocas barras, los números y las letras, más grandes
+
+    # los números: el mismo tamaño para todos (el que quepa mientras cuentan) y el destacado algo más grande
+    def mas_ancho(v, peso):
+        return max(ancho_trozos(trozos_de(v * e, unidad), peso) for e in np.linspace(0, 1, 97))
+    anchos = [mas_ancho(v, 'extrabold') for _, v in datos]
+    tam_max = max(56.0, min(76.0, 88.0 - 7.0 * n)) * u
+    tam_num = min(tam_max, min((celda - 12 * u) / max(w, 1e-3) for w in anchos))
     tams = [tam_num] * n
-    if L['dest'] >= 0:
-        wd = ancho_cifra(*finales[L['dest']], 'extrabold')
-        tams[L['dest']] = min(tam_num * 1.3, slot * 1.25 / max(wd, 1e-3))
-    gap_num = round(12 * u)
+    if dest >= 0:
+        tams[dest] = min(tam_num * 1.2, (celda * 1.1) / max(anchos[dest], 1e-3))
+    gap_num = round(14 * u)
 
     def alto_num(tam):
-        caja_ = B.fuente('bold', tam).getbbox('0')
+        caja_ = B.fuente('extrabold', tam).getbbox('0')
         return caja_[3] - caja_[1] + gap_num
 
-    # las etiquetas de abajo: en una o dos líneas, todas al mismo tamaño
+    # la insignia de la destacada (encima de su número)
+    texto_ins = str(op.get('insignia') or '').strip()
+    L['insignia'] = _insignia(texto_ins, (30 if pocas else 27) * u, u) if (texto_ins and dest >= 0) else None
+    alto_ins = L['insignia'].height + 12 * u if L['insignia'] is not None else 0.0
+
+    # las etiquetas de abajo: en una o dos líneas, todas al mismo tamaño (≥ 30 px a 1080 si caben)
     f100 = B.fuente('medium', 100)
     largo = lambda s_: f100.getlength(s_) / 100.0                                  # noqa: E731
-    tam_lab = 27 * u
+    tam_lab = (36 if pocas else 32) * u
     lineas = []
     for et, _ in datos:
-        ls = [et] if largo(et) * tam_lab <= slot - 12 * u else _partir(et, largo)
+        ls = [et] if largo(et) * tam_lab <= celda - 12 * u else _partir(et, largo)
         lineas.append(ls)
     mas_ancha = max(largo(x) for ls in lineas for x in ls)
-    tam_lab = min(tam_lab, (slot - 10 * u) / max(mas_ancha, 1e-3))
+    tam_lab = min(tam_lab, (celda - 10 * u) / max(mas_ancha, 1e-3))
     filas_lab = max(len(ls) for ls in lineas)
-    paso_lab = 1.22 * tam_lab
-    zona_cabeza = max(0.0, asoma - HUECO * u) + 8 * u       # abajo del panel queda sitio para la cabeza que sale
-    y_base = int(round(ph - zona_cabeza - filas_lab * paso_lab - 10 * u))
+    paso_lab = 1.2 * tam_lab
+    zona_cabeza = max(0.0, asoma - HUECO * u) + 18 * u      # abajo del panel queda sitio para la cabeza que sale
+    y_base = int(round(ph - zona_cabeza - filas_lab * paso_lab - 16 * u))
 
-    # el título: arriba a la derecha (si así las barras pueden subir más) o arriba a la izquierda, encima de todo
+    # el título: arriba a la izquierda, encima de todo, o arriba a la derecha (si así las barras pueden subir más)
     def titulo_en(tam):
-        r1 = Rotulo(t1, tam, 'extrabold', TINTA + (255,))
-        r2 = Rotulo(t2, tam, 'light', MORADO + (255,)) if t2 else None
+        r1 = Rotulo(t1, tam, 'extrabold', (255, 255, 255, 255))
+        r2 = Rotulo(t2, tam, 'extrabold', (255, 255, 255, 255)) if t2 else None
         c1 = ARRIBA + r1.mayus / 2
-        c2 = c1 + 1.14 * tam if r2 else c1
-        fondo_t = c2 + r1.mayus / 2 + 0.24 * tam
+        c2 = c1 + 1.16 * tam if r2 else c1
+        fondo_t = c2 + r1.mayus / 2 + (0.42 * tam if r2 else 0.2 * tam)
         ancho = max(r1.ancho, r2.ancho if r2 else 0)
         return r1, r2, c1, c2, fondo_t, ancho
 
@@ -706,20 +922,33 @@ def _preparar_grafico(c, L, asoma):
         for i in range(n):
             if fr[i] <= 0:
                 continue
-            bajo_titulo = PAD + (i + 1) * slot > x_t - 14 * u
-            tope = fondo_t + 18 * u if bajo_titulo else ARRIBA * 0.8
-            mejor = min(mejor, (y_base - tope - alto_num(tams[i])) / fr[i])
+            derecha = cxs[i] + max(bw, anchos[i] * tams[i], L['insignia'].width if (
+                i == dest and L['insignia'] is not None) else 0) / 2
+            bajo_titulo = derecha > x_t - 14 * u
+            tope = fondo_t + 16 * u if bajo_titulo else ARRIBA * 0.6
+            extra = alto_ins if i == dest else 0.0
+            mejor = min(mejor, (y_base - tope - alto_num(tams[i]) - extra) / fr[i])
         return mejor
 
-    w100 = max(B.fuente('extrabold', 100).getlength(t1), B.fuente('light', 100).getlength(t2) if t2 else 0) / 100.0
-    tam_a = min(76 * u, 0.62 * util / max(w100, 1e-3))
-    tam_b = min(60 * u, util / max(w100, 1e-3))
-    ta = titulo_en(tam_a)
+    w100 = max(B.fuente('extrabold', 100).getlength(t1), B.fuente('extrabold', 100).getlength(t2) if t2 else 0) / 100
+    w100 = max(w100, 1e-3)
+    tam_b = min(66 * u, util / w100)
     tb = titulo_en(tam_b)
-    x_a = pw - PAD - ta[5]
-    h_a = alto_max(x_a, ta[4])
     h_b = alto_max(-1e9, tb[4])
-    if h_a > 1.08 * h_b:
+    # a la derecha, dos tamaños posibles: el de siempre y el que deja libre la barra más alta (si no queda muy pequeño)
+    i_alta = max(range(n), key=lambda i: fr[i])
+    libre = pw - PAD - (cxs[i_alta] + max(bw, anchos[i_alta] * tams[i_alta]) / 2 + 36 * u)
+    mejor_a = None
+    for tam in {min(66 * u, 0.6 * util / w100), min(66 * u, libre / w100)}:
+        if tam < 44 * u:
+            continue
+        ta = titulo_en(tam)
+        x_a = pw - PAD - ta[5]
+        h_a = alto_max(x_a, ta[4])
+        if mejor_a is None or h_a > mejor_a[0]:
+            mejor_a = (h_a, ta, x_a)
+    if mejor_a is not None and mejor_a[0] > 1.1 * h_b:
+        h_a, ta, x_a = mejor_a
         r1, r2, c1, c2, _, _ = ta
         x_t, hmax = x_a, h_a
     else:
@@ -727,51 +956,61 @@ def _preparar_grafico(c, L, asoma):
         x_t, hmax = PAD, h_b
     hmax = max(40 * u, hmax)
 
-    # el panel quieto: la cuadrícula, la primera línea del título y las etiquetas
-    rgb = _cuadricula(pw, ph, u, (252, 251, 255), (234, 229, 251), 36 * u)
-    a = alfa_caja(0, 0, pw, ph, R_PANEL * u, 0, 0, pw, ph)[..., None]
-    rgb *= a
+    # el panel quieto: el fondo y la primera línea del título
+    rgb, a = _panel_grafico(pw, ph, u)
     capa(rgb, r1.capa, *r1.esquina(x_t, c1))
     L['t2'] = None
     if r2:
-        L['t2'] = (r2.capa, r2.esquina(x_t, c2))
-        # el subrayado de rotulador lila que pasa por detrás de la segunda línea
-        hh = 0.42 * r2.mayus / 0.7
-        L['marcador'] = (B.caja(r2.ancho + 22 * u, hh, hh * 0.3, LILA + (255,)),
-                         round(x_t - 11 * u), round(c2 + 0.12 * r2.mayus / 0.7 - hh / 2))
-    bw = int(round(min(0.62 * slot, 92 * u)))
-    barras = []
+        # la segunda línea, con un degradado de rosa a lila, y su subrayado de rotulador (se dibuja al llegar)
+        L['t2'] = (_degradar(r2.capa, ROSA, LILA_CLARO), r2.esquina(x_t, c2))
+        grosor = 0.21 * r2.mayus / 0.7
+        tr, tpad, tmed = _trazo(r2.ancho + 8 * u, grosor, FUCSIA + (235,), u)
+        L['marcador'] = (tr, round(x_t - 4 * u - tpad), round(c2 + r2.mayus / 2 + 0.24 * r2.mayus / 0.7 - tmed))
+
+    # las barras, sus etiquetas y su reflejo en el suelo
+    minimo = 24 * u                                       # las muy pequeñas se quedan con este alto para que se vean
+    refl = int(round(30 * u))
+    barras, etiquetas = [], []
     for i, ((et, v), ls) in enumerate(zip(datos, lineas)):
-        cxb = PAD + (i + 0.5) * slot
-        dest = i == L['dest']
-        for k, linea in enumerate(ls):
-            rt = Rotulo(linea, tam_lab, 'bold' if dest else 'medium', (TINTA if dest else GRIS) + (255,))
-            capa(rgb, rt.capa, *rt.esquina(cxb, y_base + 16 * u + rt.mayus / 2 + k * paso_lab, 'centro'))
-        alto_b = max(round(4 * u), round(hmax * fr[i]))
-        r = max(1, int(min(10 * u, bw / 2, alto_b / 2)))
-        barras.append({'x0': int(round(cxb - bw / 2)), 'cx': cxb, 'alto': alto_b, 'v': v, 'dest': dest,
-                       'capa': _capa_barra(bw, alto_b, r, col_d if dest else col), 'tam': tams[i]})
+        cxb = cxs[i]
+        es = i == dest
+        for k_, linea in enumerate(ls):
+            rt = Rotulo(linea, tam_lab, 'bold' if es else 'medium', (ORO + (255,)) if es else (255, 255, 255, 205))
+            etiquetas.append((rt.capa, rt.esquina(cxb, y_base + 20 * u + rt.mayus / 2 + k_ * paso_lab, 'centro')))
+        alto_b = max(round(minimo), round(hmax * fr[i]))
+        r = max(1, int(min(max(18 * u, 0.08 * bw), bw / 2, alto_b / 2)))
+        if es:
+            ab, ar = abajo_d, arriba_d
+        else:
+            ab, ar = abajo, abajo + (arriba - abajo) * (0.35 + 0.65 * alto_b / hmax)
+        # el reflejo: un charco del color de abajo de la barra que se apaga hacia abajo
+        kk = (1 - (np.arange(refl, dtype=np.float32) + 0.5) / refl) ** 2
+        ra = np.repeat((0.2 * kk)[:, None, None], bw, axis=1)
+        barras.append({'x0': int(round(cxb - bw / 2)), 'cx': cxb, 'alto': alto_b, 'v': v, 'dest': es,
+                       'capa': _capa_barra(bw, alto_b, r, ab, ar, u, 20 + i), 'tam': tams[i],
+                       'refl': (ab * ra, ra)})
     L['panel_rgb'], L['panel_a'] = rgb, a
-    L['barras'], L['y_base'], L['gap_num'] = barras, y_base, gap_num
-    linea = np.empty((max(1, round(2.5 * u)), int(round(util + 12 * u)), 3), np.float32)
-    linea[:] = np.asarray(TINTA, np.float32) / 255.0
-    L['linea_base'] = (linea, round(PAD - 6 * u))
+    L['barras'], L['etiquetas'], L['y_base'], L['gap_num'], L['refl'] = barras, etiquetas, y_base, gap_num, refl
+    linea = np.empty((max(1, round(2 * u)), int(round(util + 12 * u)), 3), np.float32)
+    linea[:] = 1.0
+    L['linea_base'] = (linea * 0.24, np.full(linea.shape[:2] + (1,), 0.24, np.float32), round(PAD - 6 * u))
     L['cifras'] = {}
 
-    # el brillo de la barra destacada (sale cuando termina de crecer)
-    if L['dest'] >= 0:
-        bd = barras[L['dest']]
-        sg = 16 * u
+    # el halo de la barra destacada (sale cuando termina de crecer)
+    if dest >= 0:
+        bd = barras[dest]
+        sg = max(24 * u, 0.1 * bw)
         pad = int(3 * sg)
         forma = np.zeros((bd['alto'] + 2 * pad, bw + 2 * pad), np.float32)
         forma[pad:pad + bd['alto'], pad:pad + bw] = bd['capa'][1][..., 0]
-        brillo = cv2.GaussianBlur(forma, (0, 0), sg)[..., None] * 0.75
-        L['brillo'] = (np.asarray(col_d[:3], np.float32) / 255.0 * brillo, brillo, bd['x0'] - pad,
-                       y_base - bd['alto'] - pad)
+        brillo = cv2.GaussianBlur(forma, (0, 0), sg)
+        brillo = np.clip(brillo / max(1e-3, float(brillo.max())), 0, 1)[..., None] * 0.62
+        halo = np.asarray(NARANJA, np.float32) / 255.0 * brillo + _grano(brillo.shape, 31) * brillo
+        L['brillo'] = (halo, brillo, bd['x0'] - pad, y_base - bd['alto'] - pad)
 
-    # cuándo crece cada barra (cabe en lo que dura el efecto)
+    # cuándo crece cada barra (cabe en lo que dura el efecto; si hay insignia, queda un rato quieto para leerla)
     t0 = L['entra'] * 0.9
-    t_fin = max(t0 + 0.5, c.dur - L['sale'] - 0.55)
+    t_fin = max(t0 + 0.5, c.dur - L['sale'] - (0.85 if L['insignia'] is not None else 0.55))
     crece = min(0.7, max(0.3, 0.4 * (t_fin - t0)))
     paso = (t_fin - t0 - crece) / max(1, n - 1)
     if paso < 0:
@@ -780,13 +1019,17 @@ def _preparar_grafico(c, L, asoma):
     L['marcador_t'] = (L['entra'] * 0.8, L['entra'] * 0.8 + 0.45)
 
 
-def _cifra_capa(L, num, uni, tam, dest):
-    clave = (num, uni, round(tam, 2), dest)
+def _cifra_capa(L, trozos, tam, dest):
+    clave = (tuple(trozos), round(tam, 2), dest)
     hecho = L['cifras'].get(clave)
     if hecho is None:
-        im, px, base, ancho = capa_cifra(num, uni, tam, 'extrabold' if dest else 'bold', TINTA + (255,),
-                                         (TINTA if dest else GRIS) + (255,))
-        hecho = (premult(im), px, base, ancho, im)
+        if dest:
+            col_n, col_u = ORO + (255,), ORO + (225,)
+        else:
+            col_n, col_u = (255, 255, 255, 255), (255, 255, 255, 185)
+        im, px, base, ancho = capa_trozos(trozos, tam, 'extrabold', col_n, col_u)
+        caja_ = B.fuente('extrabold', tam).getbbox('0')
+        hecho = (premult(im), px, base, ancho, caja_[3] - caja_[1], im, ancho_trozos(trozos, 'extrabold', True) * tam)
         if len(L['cifras']) > 500:
             L['cifras'].clear()
         L['cifras'][clave] = hecho
@@ -794,23 +1037,24 @@ def _cifra_capa(L, num, uni, tam, dest):
 
 
 def pintar_grafico(c, L, lienzo):
-    t = c.t
-    # la segunda línea del título, con su marcador que pasa de izquierda a derecha
+    t, u = c.t, c.u
+    # la segunda línea del título, con su subrayado que se dibuja de izquierda a derecha
     if L['t2'] is not None:
-        im, (mx, my) = L['marcador'][0], L['marcador'][1:]
+        im, mx, my = L['marcador']
         k = B.sale(B.tramo(t, *L['marcador_t']))
         if k > 0:
             capa(lienzo, im, mx, my, recorte=(mx, 0, mx + im.width * k, lienzo.shape[0]))
         capa(lienzo, L['t2'][0], *L['t2'][1])
     y_base = L['y_base']
-    # el brillo de la destacada, detrás de su barra
+    # el halo de la destacada, detrás de su barra
     if 'brillo' in L:
         i0, dur_c = L['tiempos'][L['dest']]
-        g = B.suave(B.tramo(t, i0 + dur_c * 0.85, i0 + dur_c + 0.4))
+        g = B.suave(B.tramo(t, i0 + dur_c * 0.6, i0 + dur_c + 0.35))
         if g > 0:
             rgbp, a, bx, by = L['brillo']
             sobre(lienzo, rgbp, a, bx, by, g)
-    # las barras (suben desde la línea de base) y sus números (cuentan mientras suben)
+    # las barras (suben desde la línea de base), su reflejo y sus números (cuentan mientras suben)
+    tope_dest = None
     for (i0, dur_c), b in zip(L['tiempos'], L['barras']):
         e = B.sale(B.tramo(t, i0, i0 + dur_c))
         if e <= 0:
@@ -818,12 +1062,33 @@ def pintar_grafico(c, L, lienzo):
         h = b['alto'] * e
         rgbp, a = b['capa']
         sobre(lienzo, rgbp, a, b['x0'], y_base - h, recorte=(0, 0, lienzo.shape[1], y_base))
-        num, uni = cifra(b['v'] * e)
-        (crgb, ca), px, base, ancho, _ = _cifra_capa(L, num, uni, b['tam'], b['dest'])
-        sobre(lienzo, crgb, ca, round(b['cx'] - px - ancho / 2), y_base - h - L['gap_num'] - base,
+        rr, ra = b['refl']
+        sobre(lienzo, rr, ra, b['x0'], y_base, min(1.0, h / L['refl']))
+        (crgb, ca), px, base, ancho, mayus, _, ancho_tab = _cifra_capa(L, trozos_de(b['v'] * e, L['unidad']), b['tam'],
+                                                                        b['dest'])
+        # mientras cuenta, se centra como si las cifras fueran igual de anchas (así no tiembla de lado a lado al cambiar
+        # de cifra); al llegar, se desliza suave a su centro de verdad
+        k = B.suave(B.tramo(t, i0 + 0.8 * dur_c, i0 + dur_c + 0.15))
+        yb = y_base - h - L['gap_num']
+        sobre(lienzo, crgb, ca, round(b['cx'] - px - (ancho_tab + (ancho - ancho_tab) * k) / 2), yb - base,
               B.tramo(t, i0, i0 + 0.12))
-    linea, lx = L['linea_base']
-    sobre(lienzo, linea * 0.92, np.full(linea.shape[:2] + (1,), 0.92, np.float32), lx, y_base - linea.shape[0] // 2)
+        if b['dest']:
+            tope_dest = yb - mayus
+    # las etiquetas y la línea de base
+    for im, (x, y) in L['etiquetas']:
+        capa(lienzo, im, x, y)
+    lrgb, la, lx = L['linea_base']
+    sobre(lienzo, lrgb, la, lx, y_base - lrgb.shape[0] // 2)
+    # la insignia de la destacada: aparece con un rebote cuando la barra ya llegó
+    ins = L['insignia']
+    if ins is not None and tope_dest is not None:
+        i0, dur_c = L['tiempos'][L['dest']]
+        q = B.tramo(t, i0 + dur_c, i0 + dur_c + 0.35)
+        if q > 0:
+            bd = L['barras'][L['dest']]
+            esc = 0.55 + 0.45 * B.rebote(q, 1.5)
+            punta = tope_dest - 12 * u                      # la punta del piquito se queda quieta: crece desde ahí
+            B.poner(Hoja(lienzo), ins, bd['cx'], punta - ins.height * esc / 2, escala=esc, alfa=B.tramo(q, 0, 0.4))
 
 
 # ── Panel 2: el panel de edición ────────────────────────────────────────────────────────────────────────────────────

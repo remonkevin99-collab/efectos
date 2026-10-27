@@ -1,9 +1,9 @@
 # Efectos para tus vídeos
 
-**12 efectos de edición para tus Reels, con un comando.** Le pasas a Claude tu vídeo hablando a cámara, le dices qué
+**13 efectos de edición para tus Reels, con un comando.** Le pasas a Claude tu vídeo hablando a cámara, le dices qué
 efecto quieres y en qué segundo, y en un minuto te deja el vídeo editado al lado del original. Tu voz se queda igual.
 
-![Los 12 efectos](ejemplos/efectos.jpg)
+![Los 13 efectos](ejemplos/efectos.jpg)
 
 - **Gratis** y de código abierto (MIT).
 - **Corre en tu computadora**: tu vídeo no se sube a ningún sitio.
@@ -36,22 +36,23 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 
 ¿Algo no te gusta? Díselo con palabras normales: «más pequeño», «más lento», «la palabra más arriba».
 
-## Los 12 efectos
+## Los 13 efectos
 
 | | Efecto | Qué hace |
 |---|---|---|
-| 1 | `órbita` | Tus portadas giran a tu alrededor: pasan por detrás de ti y por delante |
-| 2 | `gráfico` | La pantalla se divide: tus números en barras arriba y tú abajo, con la cabeza saliendo del corte |
-| 3 | `palabra-detrás` | Una palabra gigante detrás de tu cabeza |
-| 4 | `edición` | La pantalla se divide: el panel de edición arriba (los pasos, la línea de tiempo y el 100 %) y tú abajo |
+| 1 | `cristal` | Tarjetas de cristal flotan a tu alrededor: un contador, tu nombre, «sin editor» y una que pasa por detrás de tu brazo |
+| 2 | `fondo` | Te cambia el fondo entero: en blanco y negro, con tu nombre, tu titular y un botón de Seguir que alguien pulsa |
+| 3 | `órbita` | Tus portadas giran a tu alrededor: pasan por detrás de ti y por delante |
+| 4 | `gráfico` | La pantalla se divide: tus números en barras arriba y tú abajo, con la cabeza saliendo del corte |
 | 5 | `letrero-led` | Se apaga la luz y se enciende tu letrero detrás de ti, letra a letra |
-| 6 | `fondo` | Te cambia el fondo entero: en blanco y negro, con tu nombre, tu titular y un botón de Seguir que alguien pulsa |
-| 7 | `comentario` | Un comentario que se escribe solo, le dan corazón y llega tu respuesta |
-| 8 | `lista` | Una lista que se va marcando sola |
-| 9 | `línea-tiempo` | Color de cine y una línea de edición encima, con su título |
-| 10 | `portada` | Te conviertes en la portada de una revista |
-| 11 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
-| 12 | `tier-list` | Una tabla de la S a la F, y lo tuyo vuela hasta la S |
+| 6 | `lista` | Una lista que se va marcando sola |
+| 7 | `edición` | La pantalla se divide: el panel de edición arriba (los pasos, la línea de tiempo y el 100 %) y tú abajo |
+| 8 | `palabra-detrás` | Una palabra gigante detrás de tu cabeza |
+| 9 | `comentario` | Un comentario que se escribe solo, le dan corazón y llega tu respuesta |
+| 10 | `línea-tiempo` | Color de cine y una línea de edición encima, con su título |
+| 11 | `portada` | Te conviertes en la portada de una revista |
+| 12 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
+| 13 | `tier-list` | Una tabla de la S a la F, y lo tuyo vuela hasta la S |
 
 ## Para que quede bien
 
