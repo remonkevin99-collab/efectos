@@ -2,3 +2,4 @@
 modelos/*.tflite
 borradores/
 __pycache__/
+motor/bin/

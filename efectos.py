@@ -13,6 +13,7 @@ Opciones:
   --ancho 1080           el ancho del vídeo final (2160 = 4K); el alto, proporcional
   --fotos 1.2,3.4        en vez del vídeo, guarda esos segundos en PNG para revisar rápido
   --mascaras carpeta     usa tus propias máscaras de la persona (0000.png, 0001.png…) en vez de calcularlas
+  --recorte normal       en un Mac, no usa el recorte fino del sistema (de fábrica, «auto»: en Mac lo usa)
   --calidad 18           la calidad del vídeo (de 0 a 51: más bajo, mejor y más pesado; 18 se ve igual que el original)
   --rapidez medium       cuánto se esfuerza al comprimir: ultrafast … medium … slow (más lento, archivo más pequeño)
 
@@ -102,6 +103,12 @@ def comprobar():
         print('  bien los modelos de Google (la persona y la cara)')
     except Exception as e:
         mal(str(e))
+    try:
+        import persona
+        ok, por_que = persona.probar_recorte_mac()
+        print('  recorte fino del Mac: ' + ('sí' if ok else f'no ({por_que})'))
+    except Exception as e:
+        print(f'  recorte fino del Mac: no ({e})')
     todos = nucleo.efectos()
     print(f'  bien {len(todos)} efectos: {", ".join(sorted(m.NOMBRE for m in todos.values()))}')
     for nombre, error in nucleo.efectos_que_no_cargan().items():
@@ -134,6 +141,7 @@ def main(argv=None):
     ap.add_argument('--mascaras')
     ap.add_argument('--calidad', type=int, default=18)
     ap.add_argument('--rapidez', default='medium')
+    ap.add_argument('--recorte', default='auto')
     a = ap.parse_args(argv)
 
     if a.ayuda or (not a.cosas and not a.lista and not a.comprobar):
@@ -185,7 +193,7 @@ def main(argv=None):
             print('Aviso: con un plan, --desde, --hasta y --op no se usan (van dentro del plan).')
         fotos = [float(x) for x in a.fotos.replace(' ', '').split(',') if x] if a.fotos else None
         nucleo.procesar(video, plan, salida=a.salida, ancho=a.ancho, fotos=fotos, mascaras=a.mascaras,
-                        calidad=a.calidad, rapidez=a.rapidez)
+                        calidad=a.calidad, rapidez=a.rapidez, recorte=a.recorte.strip().lower())
         return 0
     except nucleo.ErrorMotor as e:
         print(f'Error: {e}', file=sys.stderr)

@@ -6,7 +6,8 @@ Cómo trabaja:
   1. Lee el vídeo con ffmpeg (sus medidas, los cuadros por segundo, si tiene audio y cómo guarda el color).
   2. Prepara el plan: qué efecto, desde qué segundo y hasta cuál, con qué opciones.
   3. PASADA 1, MIRAR: solo en los tramos con efecto (y medio segundo antes y después, para suavizar), busca a la persona y
-     su cara (`persona.py`). Es rápida: se hace con el vídeo pequeño.
+     su cara (`persona.py`). Es rápida: se hace con el vídeo pequeño. En un Mac, además, el recorte fino del sistema en los
+     cuadros que se pintan (si no se puede, se queda el de siempre).
   4. PASADA 2, PINTAR: lee el vídeo al tamaño final cuadro a cuadro. Donde no hay efecto, el cuadro pasa tal cual; donde
      hay, cada efecto pinta sobre él (en el orden del plan: el último queda encima). Y lo va guardando con ffmpeg, con el
      audio original.
@@ -394,9 +395,12 @@ def _reloj(seg):
 
 
 def procesar(video, plan, salida=None, ancho=1080, fotos=None, mascaras=None, calidad=18, rapidez='medium',
-             avisar=print):
-    """Pone los efectos del `plan` en el `video`. Devuelve la ruta del vídeo (o la lista de fotos, con `fotos`)."""
+             recorte='auto', avisar=print):
+    """Pone los efectos del `plan` en el `video`. Devuelve la ruta del vídeo (o la lista de fotos, con `fotos`).
+    `recorte`: 'auto' (en un Mac, el fino del sistema; si no, el normal) o 'normal'."""
     inicio = time.time()
+    if recorte not in ('auto', 'normal'):
+        raise ErrorMotor(f'--recorte puede ser «auto» o «normal», no «{recorte}».')
     info = leer_info(video)
     W, H = _medida(info, ancho)
     base_salida = os.path.splitext(os.path.abspath(video))[0] + '_efectos'
@@ -434,6 +438,15 @@ def procesar(video, plan, salida=None, ancho=1080, fotos=None, mascaras=None, ca
     t0 = time.time()
     persona.analizar(ventanas, lambda w, h, hasta: Lector(info, w, h, hasta))
     t_mirar = time.time() - t0
+
+    # pasada 1b, solo en Mac: el recorte fino del sistema, en los cuadros que se pintan
+    t_fino = 0.0
+    if recorte == 'auto' and not mascaras:
+        t0 = time.time()
+        pintar = sorted(fotos_i) if fotos else [i for i in range(hasta_cuadro)
+                                                if any(e.desde <= i / fps < e.hasta for e in entradas)]
+        if persona.recorte_fino(pintar, lambda w, h, hasta: Lector(info, w, h, hasta), W, H):
+            t_fino = time.time() - t0
 
     # lo que el motor les da a los efectos
     cache_cuadros = {}
@@ -525,7 +538,8 @@ def procesar(video, plan, salida=None, ancho=1080, fotos=None, mascaras=None, ca
     t_pintar = time.time() - t0
     total_seg = time.time() - inicio
     video_seg = hasta_cuadro / fps
-    avisar(f'Listo en {_reloj(total_seg)} (mirar: {t_mirar:.1f} s; pintar: {t_pintar:.1f} s; '
+    avisar(f'Listo en {_reloj(total_seg)} (mirar: {t_mirar:.1f} s; '
+           + (f'recorte fino: {t_fino:.1f} s; ' if t_fino else '') + f'pintar: {t_pintar:.1f} s; '
            f'{total_seg / max(video_seg, 1e-6):.2f} s por cada segundo de vídeo).')
     fallados = [e.nombre for e in entradas if e.fallo]
     if fallados:

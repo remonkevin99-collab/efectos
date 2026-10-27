@@ -7,7 +7,7 @@ efecto quieres y en qué segundo, y en un minuto te deja el vídeo editado al la
 
 - **Gratis** y de código abierto (MIT).
 - **Corre en tu computadora**: tu vídeo no se sube a ningún sitio.
-- Mac, Windows y Linux.
+- Mac, Windows y Linux. En Mac usa el recorte del propio sistema, más fino en orejas, pelo y dedos.
 
 Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/kevin.rf99/)
 

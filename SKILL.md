@@ -10,6 +10,9 @@ Un motor que le pone efectos a un vídeo vertical de alguien hablando a cámara:
 (su cabeza las tapa), tarjetas y letreros. Todo corre en la computadora de la persona: el vídeo no sale de ella. Su voz y
 su audio se quedan igual.
 
+En un Mac (macOS 14 o más nuevo) recorta a la persona con el recorte del propio sistema, más fino en orejas, pelo y dedos
+(`--recorte normal` usa el de Windows y Linux).
+
 **La carpeta de esta skill** es la que sale arriba como «Base directory». Todo se corre desde ahí:
 
 - Mac y Linux: `.venv/bin/python efectos.py …`

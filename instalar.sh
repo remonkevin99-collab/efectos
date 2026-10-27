@@ -7,6 +7,8 @@
 #   1. crea el entorno de Python en .venv (Python 3.10, 3.11 o 3.12; si tienes `uv`, lo usa y él baja Python si falta),
 #   2. instala lo necesario (requirements.txt),
 #   3. baja los dos modelos de Google (la persona y la cara) a modelos/.
+# Y en un Mac, una cuarta: prepara el recorte fino del sistema (motor/sujeto.swift → motor/bin/sujeto). Si no se puede,
+# avisa y sigue: el motor funciona igual con su recorte normal.
 # Y al final comprueba que todo funciona y dice LISTO.
 set -euo pipefail
 
@@ -94,6 +96,25 @@ bajar selfie_segmenter.tflite \
   "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite"
 bajar blaze_face_short_range.tflite \
   "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite"
+
+# ── el recorte fino del Mac (solo en Mac) ───────────────────────────────────────────────────────────────────────────
+if [ "$(uname -s)" = "Darwin" ]; then
+  if [ -x motor/bin/sujeto ] && [ ! motor/sujeto.swift -nt motor/bin/sujeto ]; then
+    echo "Recorte fino del Mac: ya está."
+  elif xcode-select -p >/dev/null 2>&1 && command -v swiftc >/dev/null 2>&1; then
+    echo "Recorte fino del Mac: preparándolo..."
+    mkdir -p motor/bin
+    if swiftc -O motor/sujeto.swift -o motor/bin/sujeto.parte >/dev/null 2>&1; then
+      mv motor/bin/sujeto.parte motor/bin/sujeto
+      echo "Recorte fino del Mac: listo."
+    else
+      rm -f motor/bin/sujeto.parte
+      echo "Recorte fino del Mac: no se pudo preparar (hace falta macOS 14 o más nuevo). Funciona igual, con el recorte normal."
+    fi
+  else
+    echo "Recorte fino del Mac: para tenerlo, corre 'xcode-select --install' y después este archivo otra vez. Sin eso funciona igual."
+  fi
+fi
 
 # ── la prueba final ─────────────────────────────────────────────────────────────────────────────────────────────────
 "$PY" efectos.py --comprobar

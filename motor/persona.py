@@ -25,12 +25,22 @@ Cómo se hace, paso a paso (cada paso arregla algo que se ve mal en un vídeo):
      suaviza con una pasada hacia delante y otra hacia atrás. Si en un tramo no aparece ninguna cara, sale de la parte de
      arriba de la silueta.
 
+EN UN MAC (macOS 14 o más nuevo), el recorte es el del sistema, el «levantar sujeto» de Fotos (`sujeto.swift`, que compila
+la instalación): sale a tamaño real y no se come las orejas, el pelo ni los dedos. Se hace solo en los cuadros que se pintan
+con efecto, a 1080 como mucho, y se cruza con el de arriba: lo que el Mac ve lejos de la persona (una mesa, un taburete) se
+quita, y si en la cabeza le falta un trozo que el de arriba sí ve (una oreja), se rellena. Si no está o falla, el de arriba.
+
 Con `--mascaras <carpeta>` la máscara no se calcula: se lee una imagen por cuadro (0000.png, 0001.png…; la máscara en el
 canal alfa o en gris): sirve para usar un recorte mejor hecho con otra herramienta (por ejemplo, el de «Quitar fondo» de
 macOS o el de un editor). La cara se sigue buscando.
 """
 import os
+import platform
+import queue
+import subprocess
 import sys
+import tempfile
+import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -350,6 +360,101 @@ def afinar(b, cuadro):
     return np.multiply(q8, np.float32(1.0 / 255.0), dtype=np.float32)
 
 
+# ── El recorte fino del Mac ─────────────────────────────────────────────────────────────────────────────────────────
+BIN_SUJETO = os.path.join(AQUI, 'bin', 'sujeto')
+LADO_CORTO_FINO = 1080      # el recorte fino se hace a este tamaño como mucho (a 4K se sube al pintar)
+ABRIR = 7                   # en las orejas, lo que le falta al fino cuenta si tiene al menos este grosor (px a 1080)
+
+
+def recorte_mac():
+    """(True, '') si este equipo puede usar el recorte fino del Mac; si no, (False, por qué no)."""
+    if sys.platform != 'darwin':
+        return False, 'solo hay en Mac; se usa el recorte normal'
+    try:
+        mayor = int(platform.mac_ver()[0].split('.')[0])
+    except ValueError:
+        mayor = 0
+    if mayor < 14:
+        return False, 'hace falta macOS 14 o más nuevo; se usa el recorte normal'
+    if not os.access(BIN_SUJETO, os.X_OK):
+        return False, 'falta prepararlo: corre «bash instalar.sh»'
+    return True, ''
+
+
+def probar_recorte_mac():
+    """Como `recorte_mac`, pero además lo prueba de verdad (para --comprobar)."""
+    ok, por_que = recorte_mac()
+    if not ok:
+        return ok, por_que
+    try:
+        r = subprocess.run([BIN_SUJETO, '--prueba'], capture_output=True, text=True, timeout=120)
+    except Exception as e:
+        return False, f'no arranca ({e})'
+    if r.returncode != 0:
+        ultima = (r.stderr.strip().splitlines() or ['no funciona'])[-1]
+        return False, ultima.replace('sujeto: ', '')
+    return True, ''
+
+
+def _rellenar_orejas(a, fino, persona, cara, k):
+    """Las orejas que le faltan al fino (a veces corta por dentro de una y la deja fuera): lo que `persona` (bool) ve y el
+    fino no, a cada lado de la cara y A LA ALTURA DE LA CARA, si es un trozo con cuerpo y grande. Se rellena en `a`, sin
+    quitar nada nunca. Solo ahí: más arriba, el de personas del Mac a ratos se lleva la cámara web o la luz pegadas a la
+    gorra; en el cuerpo, con el movimiento, rellenar mete tiras de pared y tapa el hueco entre el brazo y el cuerpo.
+    `cara`: (cx, cy, ancho) en píxeles; `k`: el tamaño frente a 1080. Devuelve los píxeles rellenados."""
+    H, W = fino.shape
+    cx, cy, w = cara
+    y0, y1 = int(max(0, cy - 0.9 * w)), int(min(H, cy + 0.6 * w))
+    if y1 - y0 < 8 or w < 8:
+        return 0
+    falta = persona[y0:y1] & (fino[y0:y1] < 102)
+    falta[:, max(0, int(cx - 0.25 * w)):max(0, int(cx + 0.25 * w))] = False        # la cara: solo los lados
+    # solo los trozos con cuerpo: el filo de 1–3 píxeles en que los dos bordes no coinciden no es una oreja
+    redondo = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (_impar(ABRIR * k),) * 2)
+    falta &= cv2.dilate(cv2.erode(falta.astype(np.uint8), redondo), redondo).astype(bool)
+    n, etq, st, centros = cv2.connectedComponentsWithStats(falta.astype(np.uint8), connectivity=8)
+    if n <= 1:
+        return 0
+    # una oreja tiene su centro entre los ojos y la boca (medido en una toma real: las orejas, de −0,32 a +0,05 anchos de
+    # cara desde el centro de la cara; una cámara web y una luz pegadas a la gorra, de −0,89 a −0,22, con el centro por
+    # encima de −0,45)
+    alto_ok = np.abs(centros[:, 1] + y0 - (cy + 0.02 * w)) <= 0.32 * w
+    izquierda = centros[:, 0] < cx
+    total = np.zeros_like(falta)
+    for lado in (izquierda, ~izquierda):
+        vale = alto_ok & lado
+        vale[0] = False
+        if st[vale, cv2.CC_STAT_AREA].sum() > 250 * k * k:
+            total |= vale[etq]
+    if not total.any():
+        return 0
+    # macizo y de una pieza con lo que el fino ya tenía (rellenado aparte, la costura quedaba a medias y se veía lo de
+    # detrás); solo el filo de fuera queda suave
+    junto = total | (fino[y0:y1] >= 102)
+    cerca = cv2.dilate(total.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (_impar(9 * k),) * 2))
+    relleno = cv2.GaussianBlur(junto.astype(np.float32), (0, 0), 1.2 * k) * cerca
+    np.maximum(a[y0:y1], relleno, out=a[y0:y1])
+    return int(total.sum())
+
+
+def _impar(x):
+    return max(3, int(round(x)) // 2 * 2 + 1)
+
+
+def combinar_fino(fino, mac, p, cara):
+    """El recorte fino del Mac (`fino`, uint8) con el de personas del Mac (`mac`, uint8) y el normal (`p`, float 0–1),
+    los tres del mismo tamaño, y la cara (cx, cy, ancho) en píxeles. Las orejas que le falten al fino vuelven con el de
+    personas del Mac (con el normal no: se pasa de la oreja a la pared y metía un trozo de pared al lado de la oreja), y
+    fuera lo que el fino coja lejos de la persona según el normal, que es estable (una mesa, un taburete). Devuelve
+    (máscara float32 0–1, píxeles rellenados)."""
+    k = min(fino.shape) / 1080.0
+    a = fino.astype(np.float32) * np.float32(1.0 / 255.0)
+    relleno = _rellenar_orejas(a, fino, mac > 127, cara, k)
+    cerca = cv2.dilate((p > 0.3).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (_impar(51 * k),) * 2))
+    cerca = cv2.GaussianBlur(cerca.astype(np.float32), (0, 0), 6 * k)
+    return a * cerca, relleno
+
+
 # ── Las máscaras de una carpeta ─────────────────────────────────────────────────────────────────────────────────────
 class CarpetaMascaras:
     """Una máscara por cuadro: 0000.png, 0001.png… (o las que haya, en orden). La máscara va en el canal alfa (blanco con
@@ -423,6 +528,7 @@ class Persona:
         self._ultima = None          # la última cara encontrada: (cx, cy, ancho) en fracción, y en qué cuadro
         self._ultima_i = -999
         self._v = None               # el tramo que se está mirando
+        self.finos = {}              # el recorte fino del Mac: {cuadro: PNG en memoria}
 
     # pasada 1: mirar ----------------------------------------------------------------------------------------------
     def analizar(self, ventanas, lector_de):
@@ -585,6 +691,114 @@ class Persona:
         out[Y0:Y1, X0:X1] = conf[Y0:Y1, X0:X1] * (1 - peso) + cab * peso
         return out
 
+    # pasada 1b, solo en Mac: el recorte fino ---------------------------------------------------------------------
+    def recorte_fino(self, cuadros, lector_de, ancho, alto):
+        """El recorte fino del Mac de los `cuadros` (los que se pintan con efecto), para pintar a `ancho` × `alto`. Si no se
+        puede o algo falla, avisa en una línea y se queda el recorte normal: nunca para el vídeo. Devuelve si se usó."""
+        self.finos = {}
+        cuadros = sorted(i for i in set(cuadros) if self.tramo_de(i) is not None)
+        if not cuadros or self.carpeta is not None:
+            return False
+        ok, por_que = recorte_mac()
+        if not ok:
+            if sys.platform == 'darwin':
+                self.avisar(f'  Aviso: sin el recorte fino del Mac ({por_que}); uso el recorte normal.')
+            return False
+        wf, hf = (ancho, alto) if min(ancho, alto) <= LADO_CORTO_FINO else \
+            tamano_con_lado_corto(ancho, alto, LADO_CORTO_FINO)
+        self.avisar(f'  Recortando a la persona con el Mac: {len(cuadros)} cuadros…')
+        errores = tempfile.TemporaryFile()
+        proc = subprocess.Popen([BIN_SUJETO, str(wf), str(hf)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                stderr=errores)
+        lector = lector_de(wf, hf, cuadros[-1] + 1)
+        cola = queue.Queue(maxsize=4)
+        quieren = set(cuadros)
+        leidos = [0]
+
+        def dar():
+            """Lee el vídeo y le pasa al Mac los cuadros que hacen falta (en otro hilo: así el Mac y Python trabajan a
+            la vez)."""
+            try:
+                for i in range(cuadros[-1] + 1):
+                    crudo = lector.leer()
+                    if crudo is None:
+                        break
+                    leidos[0] = i + 1
+                    if i in quieren:
+                        cola.put((i, crudo))
+                        proc.stdin.write(crudo)
+            except (BrokenPipeError, OSError, ValueError):
+                pass
+            finally:
+                cola.put(None)
+                try:
+                    proc.stdin.close()
+                except Exception:
+                    pass
+
+        hilo = threading.Thread(target=dar, daemon=True)
+        hilo.start()
+        n_px = wf * hf
+        malos = 0
+        finos = {}
+        try:
+            while True:
+                x = cola.get()
+                if x is None:
+                    break
+                i, crudo = x
+                estado = proc.stdout.read(1)
+                gris = proc.stdout.read(n_px)
+                mac = proc.stdout.read(n_px)
+                if len(estado) < 1 or len(mac) < n_px:
+                    errores.seek(0)
+                    ultima = (errores.read().decode('utf-8', 'replace').strip().splitlines() or ['se paró'])[-1]
+                    raise RuntimeError(ultima.replace('sujeto: ', ''))
+                t = self.tramo_de(i)
+                cuadro = np.frombuffer(crudo, np.uint8).reshape(hf, wf, 3)
+                b = np.unpackbits(t.mascaras[i - t.i0])[:t.forma[0] * t.forma[1]].reshape(t.forma)
+                p = afinar(b, cuadro)
+                m = None
+                if estado == b'\x01':
+                    cx, cy, an = t.caras[i - t.i0]
+                    m, _ = combinar_fino(np.frombuffer(gris, np.uint8).reshape(hf, wf),
+                                         np.frombuffer(mac, np.uint8).reshape(hf, wf), p, (cx * wf, cy * hf, an * wf))
+                    # si el Mac casi no ve a la persona que ve el normal (otro sujeto, un cuadro raro), ese cuadro va
+                    # con el normal
+                    if m.sum() < 0.6 * p.sum():
+                        m = None
+                if m is None:
+                    malos += 1
+                    m = p
+                finos[i] = cv2.imencode('.png', cv2.convertScaleAbs(m, alpha=255.0),
+                                        [cv2.IMWRITE_PNG_COMPRESSION, 1])[1]
+        except Exception as e:
+            self.avisar(f'  Aviso: el recorte fino del Mac falló ({e}); uso el recorte normal.')
+            return False
+        finally:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            proc.wait()
+            while hilo.is_alive():               # que el hilo no se quede esperando en la cola
+                try:
+                    cola.get(timeout=0.1)
+                except queue.Empty:
+                    pass
+            lector.cerrar()
+            errores.close()
+        faltan = [i for i in cuadros if i < leidos[0] and i not in finos]
+        if faltan:
+            self.avisar(f'  Aviso: el recorte fino del Mac se quedó a medias ({len(faltan)} cuadros sin hacer); uso el '
+                        'recorte normal.')
+            return False
+        if malos:
+            self.avisar(f'  Aviso: en {malos} de {len(cuadros)} cuadros el recorte fino del Mac no vio a la persona; '
+                        'en esos va el recorte normal.')
+        self.finos = finos
+        return True
+
     # pasada 2: dar la persona y la cara al pintar ------------------------------------------------------------------
     def tramo_de(self, i):
         for t in self.tramos:
@@ -599,6 +813,11 @@ class Persona:
         t = self.tramo_de(i)
         if self.carpeta is not None:
             m = self.carpeta.leer(i, W, H)
+        elif i in self.finos:
+            m = cv2.imdecode(self.finos[i], cv2.IMREAD_GRAYSCALE)
+            if m.shape != (H, W):
+                m = cv2.resize(m, (W, H), interpolation=cv2.INTER_LINEAR)
+            m = np.multiply(m, np.float32(1.0 / 255.0), dtype=np.float32)
         elif t is not None:
             n_px = t.forma[0] * t.forma[1]
             b = np.unpackbits(t.mascaras[i - t.i0])[:n_px].reshape(t.forma)
