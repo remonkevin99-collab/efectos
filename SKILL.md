@@ -52,6 +52,9 @@ Aquí lo llamamos `PY efectos.py`.
    - Los nombres valen con tilde o sin ella (órbita = orbita).
    - Sin `hasta`, cada efecto dura lo suyo (la tabla de abajo).
    - Que no se pisen dos efectos que ocupan el mismo sitio.
+   - **Antes de pintar, pregúntale en UN solo mensaje lo que te falte** para los efectos que pidió (su nombre, su @, los
+     números del gráfico, la palabra, los pasos…). Si no contesta algo, quita esa tarjeta (texto vacío): nunca sale «TU
+     NOMBRE» ni «@tu_usuario» en su vídeo.
    - **Los textos, de la persona.** Los de fábrica son de ejemplo: cámbialos por lo suyo.
      - `comentario`: `creador` es su cuenta (pregúntasela una vez si no la sabes) y `texto`, la palabra que pide comentar.
      - `lista`: los pasos de lo que explica.
@@ -60,8 +63,9 @@ Aquí lo llamamos `PY efectos.py`.
        propio vídeo.
      - `grafico`: sus números de verdad (`datos`). Pregúntaselos; los de fábrica son de ejemplo.
      - `fondo`: su nombre y su cuenta (`nombre`, `usuario`) y su titular (`lineas`).
-     - `cristal`: su nombre y su cuenta, lo que cuenta el contador (`numero`, `texto_numero`) y el calendario (`dia`,
-       `fecha`, `evento`: el día que lo sube; o `fecha` vacía, y el calendario no sale).
+     - `cristal`: su nombre y su cuenta y lo que cuenta el contador (`numero`, `texto_numero`). El calendario sale con
+       la fecha de hoy (`fecha`=hoy) y `evento`; si lo sube otro día, pon ese día (`dia`, `fecha`), o `fecha` vacía y no
+       sale.
      - Nunca te inventes cifras, nombres o resultados que la persona no te dio.
 4. **Revisa antes de hacer el vídeo.** Saca fotos de 2 o 3 momentos de cada efecto: el principio, la mitad y el final.
    ```
@@ -77,22 +81,26 @@ Aquí lo llamamos `PY efectos.py`.
    ```
    PY efectos.py video.mp4 --plan plan.json
    ```
-   - Deja `video_efectos.mp4` al lado del original, que nunca se toca.
+   - **Cada pedido, su propio archivo**, al lado del original (que nunca se toca): `--salida video_<efecto>.mp4` (con
+     varios efectos, sus nombres). Así un `/efectos` nuevo no borra el anterior. Si dice «añádelo al de antes», el vídeo
+     de entrada es el último que hiciste.
    - Dile dónde está y que lo mire antes de subirlo.
-   - En 4K, añade `--ancho 2160` (tarda unas 4 veces más).
+   - **Sale a 1080 de ancho.** Si su vídeo es 4K, pregúntale si lo quiere en 4K: `--ancho 2160` (tarda unas 4 veces más).
 6. **Los cambios, con sus palabras.**
    - «más largo» o «más corto»: mueve `desde` y `hasta`.
    - «otro color»: la opción `color`, en hexadecimal (#FF3B30).
    - «más grande» o «más rápido» en la órbita: `tamano` y `velocidad`; «más separadas»: `radio`; «que se aceleren cuando
      hago el gesto»: `acelera` con el segundo del gesto (míralo en los cuadros).
-   - Lo que no tenga opción («más arriba», «la letra más gorda»): cada efecto es un archivo corto en `motor/efectos/`,
-     con sus medidas arriba y comentadas. Cambia el número y dile qué cambiaste.
+   - Lo que no tenga opción («más arriba», «la letra más gorda», «el contador más pequeño»): cada efecto es un archivo en
+     `motor/efectos/`, con sus medidas comentadas (arriba o en la función de cada tarjeta). Cambia el número, haz fotos
+     y dile qué cambiaste. Ese cambio queda para sus vídeos siguientes; antes de actualizar con `git pull`, guárdalo con
+     `git stash` (y `git stash pop` después) o se pisará.
 
 ## Los 13 efectos
 
 | Efecto | Qué hace | Dura | Opciones (y lo que traen) |
 |---|---|---|---|
-| `cristal` | 8 tarjetas grandes de cristal a su alrededor, varias por detrás (su cabeza y sus brazos pasan por delante): el número enorme, la barra de exportar, su ficha con su foto, un calendario, lo que se está editando, el anillo 4K, una marca que se dibuja y la pastilla de abajo | 3,5 s | `marca`, `numero`=13, `texto_numero`, `exportando`, `resolucion`=4K, `fps`=30, `nombre`, `usuario`, `dia`, `fecha`, `evento`, `editando_titulo`, `editando`, `etiqueta`, `pastilla`, `color` (un texto vacío quita su tarjeta) |
+| `cristal` | 8 tarjetas grandes de cristal a su alrededor, varias por detrás (su cabeza y sus brazos pasan por delante): el número enorme, la barra de exportar, su ficha con su foto, un calendario, lo que se está editando, el anillo 4K, una marca que se dibuja y la pastilla de abajo | 3,5 s | `marca`, `numero`=13, `texto_numero`, `exportando`, `resolucion`=4K, `fps`=30, `nombre`, `usuario`, `dia`, `fecha`=hoy, `evento`, `editando_titulo`, `editando`, `etiqueta`, `pastilla`, `color` (un texto vacío quita su tarjeta) |
 | `fondo` | Le cambia el fondo entero: en blanco y negro, con un aro de luz, su titular, su nombre y un botón de Seguir que se pulsa | 3,5 s | `lineas` (`UNO.\|DOS.\|TRES.`), `nombre`, `usuario`, `color`, `boton`=si, `texto`, `texto_hecho`, `momento`, `lado`, `color_persona`=no, `letras`, `techo`=210 (250 si es para la portada) |
 | `orbita` | De 3 a 6 tarjetas con fotos giran alrededor de su cabeza: pasan por detrás y por delante, sin taparle la cara; empiezan pegadas y se abren, y si se pide se aceleran en el segundo de un gesto suyo | 4 s | `imagenes` (carpeta), `cantidad`=5, `tamano`=300, `velocidad`=1, `radio`=1.3, `radio_inicio`=1, `acelera` (segundos desde que empieza; vacío = nunca), `acelera_por`=3, `acelera_dura`=1.2 |
 | `grafico` | La pantalla se divide: arriba, un gráfico de barras con sus números; abajo, la persona, con la cabeza saliendo del corte | 3,5 s | `titulo` (`primera línea/segunda`), `datos` (`etiqueta:número\|…`), `unidad`=min (minutos: «3 h», «30 min»; vacía = números sueltos), `destacar`=ultima (o menor, mayor, un número, ninguna), `insignia`, `color` y `color_destacado` (`#abajo,#arriba`), `fondo`, `alto`=0.5, `zoom`=auto, `asoma`=120 |
@@ -113,9 +121,13 @@ el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del
 
 ## Si te pide subtítulos
 
-No son uno de los 13 efectos, pero se pueden poner sobre el vídeo ya editado: las palabras con su segundo salen de
-`PY motor/palabras.py video.mp4`, y se queman con el ffmpeg del motor (`imageio_ffmpeg.get_ffmpeg_exe()`, filtro
-`subtitles`), con el audio igual. Frases cortas, abajo y sin taparle la cara. Enséñale una foto antes del vídeo entero.
+No son uno de los 13 efectos, pero se pueden poner sobre el último vídeo que hiciste (o el que diga):
+1. Las palabras con su segundo: `PY motor/palabras.py video.mp4`. **Enséñale el texto y que lo corrija** antes de
+   quemarlo (los nombres y las palabras raras salen mal a veces). Si sale «No he entendido ninguna palabra», su audio está
+   muy bajo: díselo.
+2. Quémalos con el ffmpeg del motor (`imageio_ffmpeg.get_ffmpeg_exe()`; el del sistema puede no tener el filtro), filtro
+   `subtitles=...:fontsdir=fuentes` (Poppins), el audio igual. Frases cortas, abajo y sin taparle la cara.
+3. Una foto antes del vídeo entero.
 
 ## Si algo falla
 

@@ -217,12 +217,15 @@ class Escritor:
 
 
 def sacar_cuadros(info, n, ancho=540):
-    """n cuadros del vídeo repartidos a lo largo (sin el principio ni el final), como imágenes PIL RGBA."""
+    """n cuadros del vídeo repartidos a lo largo, como imágenes PIL RGBA. Sin el principio ni el final: ahí uno se
+    prepara o se levanta a parar la grabación (al final salía una tarjeta con él agachado)."""
     from PIL import Image
     out = []
     alto = int(round(ancho * info.alto / info.ancho / 2)) * 2
+    ini = min(1.0, 0.15 * info.duracion)
+    fin = info.duracion - min(1.5, 0.2 * info.duracion)
     for k in range(int(n)):
-        seg = info.duracion * (k + 0.5) / max(1, int(n))
+        seg = ini + (fin - ini) * (k + 0.5) / max(1, int(n))
         crudo = subprocess.run([buscar_ffmpeg(), '-v', 'error', '-nostdin', '-ss', f'{seg:.3f}', '-i', info.ruta,
                                 '-frames:v', '1', '-vf', f'scale={ancho}:{alto}:flags=lanczos,format=rgb24',
                                 '-f', 'rawvideo', '-'], capture_output=True).stdout

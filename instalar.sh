@@ -48,6 +48,17 @@ else
     fi
   done
   if [ -z "$BASE" ]; then
+    # no hay un Python que sirva: se instala uv (el instalador oficial, en tu carpeta de usuario), que baja Python solo
+    echo "Python: no tienes Python 3.10, 3.11 o 3.12 (MediaPipe todavía no funciona con los más nuevos)."
+    echo "        Instalo uv, que lo baja solo (es una vez, en tu carpeta de usuario)..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1 || true
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+  fi
+  if [ -z "$BASE" ] && command -v uv >/dev/null 2>&1; then
+    echo "Python: creando .venv con uv (Python 3.12)..."
+    rm -rf "$VENV"
+    uv venv --seed --python 3.12 "$VENV"
+  elif [ -z "$BASE" ]; then
     echo ""
     echo "ERROR: falta Python 3.10, 3.11 o 3.12 (MediaPipe todavía no funciona con versiones más nuevas)."
     echo "  La forma más fácil: instala uv (https://docs.astral.sh/uv/) y vuelve a correr este archivo; uv baja Python solo."
@@ -57,9 +68,11 @@ else
     echo "    Ubuntu/Debian: sudo apt install python3.12 python3.12-venv"
     exit 1
   fi
-  echo "Python: creando .venv con $BASE ($("$BASE" --version 2>&1))..."
-  rm -rf "$VENV"
-  "$BASE" -m venv "$VENV"
+  if [ -n "$BASE" ]; then
+    echo "Python: creando .venv con $BASE ($("$BASE" --version 2>&1))..."
+    rm -rf "$VENV"
+    "$BASE" -m venv "$VENV"
+  fi
 fi
 
 # un .venv viejo hecho con uv puede no tener pip (y el transcriptor de palabras lo usa): se le pone

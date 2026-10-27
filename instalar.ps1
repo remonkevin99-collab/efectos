@@ -65,6 +65,19 @@ if ($VenvSirve) {
         }
     }
     if ($null -eq $Base) {
+        # no hay un Python que sirva: se instala uv (el instalador oficial, en tu carpeta de usuario), que baja Python solo
+        Write-Host 'Python: no tienes Python 3.10, 3.11 o 3.12 (MediaPipe todavía no funciona con los más nuevos).'
+        Write-Host '        Instalo uv, que lo baja solo (es una vez, en tu carpeta de usuario)...'
+        try { powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex" *> $null } catch { }
+        $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+        if (Existe 'uv') {
+            Write-Host 'Python: creando .venv con uv (Python 3.12)...'
+            if (Test-Path $Venv) { Remove-Item -Recurse -Force $Venv }
+            uv venv --seed --python 3.12 $Venv
+            if ($LASTEXITCODE -ne 0) { Falla 'uv no pudo crear el entorno de Python (mira el mensaje de arriba).' }
+        }
+    }
+    if ($null -eq $Base -and -not (Test-Path $Py)) {
         Write-Host ''
         Write-Host 'ERROR: falta Python 3.10, 3.11 o 3.12 (MediaPipe todavía no funciona con versiones más nuevas).'
         Write-Host '  La forma más fácil: instala uv y vuelve a correr este archivo; uv baja Python solo:'
@@ -74,13 +87,15 @@ if ($VenvSirve) {
         Write-Host '  Después, cierra esta ventana, abre otra y vuelve a correr la instalación.'
         exit 1
     }
-    $Partes = $Base.Split(' ')
-    $Exe = $Partes[0]
-    if ($Partes.Length -gt 1) { $Extra = $Partes[1..($Partes.Length - 1)] } else { $Extra = @() }
-    Write-Host "Python: creando .venv con $Base ($(& $Exe @Extra --version 2>&1))..."
-    if (Test-Path $Venv) { Remove-Item -Recurse -Force $Venv }
-    & $Exe @Extra -m venv $Venv
-    if ($LASTEXITCODE -ne 0) { Falla 'no se pudo crear el entorno de Python (mira el mensaje de arriba).' }
+    if ($null -ne $Base) {
+        $Partes = $Base.Split(' ')
+        $Exe = $Partes[0]
+        if ($Partes.Length -gt 1) { $Extra = $Partes[1..($Partes.Length - 1)] } else { $Extra = @() }
+        Write-Host "Python: creando .venv con $Base ($(& $Exe @Extra --version 2>&1))..."
+        if (Test-Path $Venv) { Remove-Item -Recurse -Force $Venv }
+        & $Exe @Extra -m venv $Venv
+        if ($LASTEXITCODE -ne 0) { Falla 'no se pudo crear el entorno de Python (mira el mensaje de arriba).' }
+    }
 }
 
 # un .venv viejo hecho con uv puede no tener pip (y el transcriptor de palabras lo usa): se le pone

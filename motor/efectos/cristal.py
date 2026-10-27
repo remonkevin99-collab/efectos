@@ -56,8 +56,8 @@ OPCIONES = {
     'fps': '30',                          # dentro del anillo, debajo de la resolución («30 fps»)
     'nombre': 'TU NOMBRE',                # la ficha: tu nombre…
     'usuario': '@tu_usuario',             # …y tu @
-    'dia': 'MAR',                         # el calendario: el día de la semana…
-    'fecha': '27',                        # …el número del día (vacío: el calendario no sale)…
+    'dia': '',                            # el calendario: el día de la semana (vacío y con «hoy»: el de hoy)…
+    'fecha': 'hoy',                       # …el número del día («hoy»: el de hoy; vacío: el calendario no sale)…
     'evento': 'Subir el Reel',            # …y lo que toca ese día
     'editando_titulo': 'AHORA EDITANDO',  # la línea pequeña de la tarjeta de edición
     'editando': 'Cortes sin pausas',      # lo que se está editando (vacío: esa tarjeta no sale)
@@ -583,10 +583,15 @@ def _calendario(c, E):
     fecha = str(c.op.get('fecha') or '').strip()
     if not fecha:
         return None
+    dia = str(c.op.get('dia') or '').strip().upper()
+    if fecha.lower() == 'hoy':                    # el día en que se hace el vídeo (de fábrica: nunca una fecha vieja)
+        import datetime
+        hoy = datetime.date.today()
+        fecha = str(hoy.day)
+        dia = dia or ('LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM')[hoy.weekday()]
     T = Tarjeta('calendario', 436 * u, 304 * u, 40 * u, u, detras=True)
     pad = 32 * u
     util = 300 * u - pad                          # el texto, solo en la parte de fuera (la de dentro va tras la cabeza)
-    dia = str(c.op.get('dia') or '').strip().upper()
     if dia:
         Rotulo(dia, _tam_que_cabe(dia, 'bold', 28 * u, util, 0.12), 'bold', E['claro8'], espacio=0.12).poner(
             T.contenido, pad, 48 * u)
