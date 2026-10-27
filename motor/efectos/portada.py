@@ -8,8 +8,10 @@ código de barras pequeño abajo. Al final todo se va con un fundido y la cámar
     .venv/bin/python efectos.py portada tu_video.mp4 --fotos 0.3,0.9,1.6,3.0
 
 """
+import datetime
 import math
 import random
+import re
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -25,8 +27,8 @@ NOMBRE = 'portada'
 DESCRIPCION = 'Te convierte en la portada de una revista'
 OPCIONES = {
     'titulo': 'EFECTOS',                       # el nombre de la revista (va enorme, detrás de la cabeza)
-    'numero': 'Nº 1 · OCTUBRE 2026',           # la línea del número y la fecha
-    'lineas': 'Un clip|9 efectos|sin editor',  # los tres titulares, separados por «|» (el primero va grande)
+    'numero': 'Nº 1 · hoy',                    # la línea del número y la fecha («hoy» = el mes y el año de hoy)
+    'lineas': 'Un clip|13 efectos|sin editor', # los tres titulares, separados por «|» (el primero va grande)
     'color': '#8B5CF6',                        # el color de acento (las rayitas de los titulares)
     'lado': 'auto',                            # dónde van los titulares: izquierda, derecha o auto (donde hay sitio)
     'zoom': '1.2',                             # cuánto se acerca la cámara (1 = nada)
@@ -34,6 +36,14 @@ OPCIONES = {
 DURACION = 4.0
 
 BLANCO = (255, 255, 255, 255)
+MESES = ('ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE',
+         'DICIEMBRE')
+
+
+def _con_fecha(texto):
+    """«hoy» en la línea del número se cambia por el mes y el año de hoy («Nº 1 · hoy» → «Nº 1 · OCTUBRE 2026»)."""
+    hoy = datetime.date.today()
+    return re.sub(r'(?i)\bhoy\b', f'{MESES[hoy.month - 1]} {hoy.year}', str(texto))
 
 
 # ── El acercamiento de la cámara ────────────────────────────────────────────────────────────────────────────────────
@@ -228,7 +238,7 @@ def _preparar(c):
     base = cabeza + 0.42 * fan
     alto_max = max(120 * u, min(250 * u, base - 190 * u))
     cab = _cabecera(c.op.get('titulo', 'EFECTOS'), ancho_util, alto_max, u)
-    num = _numero(c.op.get('numero', ''), cab.width, u)
+    num = _numero(_con_fecha(c.op.get('numero', '')), cab.width, u)
     # si la cabeza está muy arriba, el nombre baja (va detrás de la persona: puede bajar sin taparle la cara) para que
     # la línea del número no se salga por arriba
     base = max(base, 70 * u + num.height + 26 * u + cab.height)

@@ -58,7 +58,8 @@ Aquí lo llamamos `PY efectos.py`.
    - **Los textos, de la persona.** Los de fábrica son de ejemplo: cámbialos por lo suyo.
      - `comentario`: `creador` es su cuenta (pregúntasela una vez si no la sabes) y `texto`, la palabra que pide comentar.
      - `lista`: los pasos de lo que explica.
-     - `tier-list` y `portada`: su tema.
+     - `tier-list` y `portada`: su tema. La portada pone sola el mes de hoy (`numero`).
+     - `palabra-detras` y `letrero-led`: la palabra clave de lo que dice en ese momento.
      - `orbita`: una carpeta con sus imágenes (sus portadas, sus productos, capturas). Sin carpeta, usa cuadros del
        propio vídeo.
      - `grafico`: sus números de verdad (`datos`). Pregúntaselos; los de fábrica son de ejemplo.
