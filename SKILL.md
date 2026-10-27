@@ -37,7 +37,7 @@ Aquí lo llamamos `PY efectos.py`.
 
 ## Paso a paso
 
-1. **El vídeo.** Es el que arrastró al chat (su ruta). Si no hay ninguno, pídeselo.
+1. **El vídeo.** Es el que arrastró a la conversación (su ruta). Si no hay ninguno, pídeselo.
    - Si es horizontal, avisa: los efectos están pensados para vertical (9:16).
 2. **Qué dice y en qué segundo.** Si habla de palabras («cuando digo…») o no dio segundos, saca la transcripción con
    `PY motor/palabras.py video.mp4`. Deja `video.palabras.json`, con el segundo de cada palabra. Úsala para que cada
@@ -113,15 +113,9 @@ el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del
 
 ## Si te pide subtítulos
 
-No son uno de los 13 efectos, pero se ponen así, después de los efectos y sobre el vídeo que ya los lleva:
-1. Las palabras con su segundo: `PY motor/palabras.py video.mp4` (deja `video.palabras.json`).
-2. Un `.ass` con frases cortas de una línea (unas 3 o 4 palabras, como mucho ~22 letras), que entren con la primera palabra
-   y se vayan al empezar la siguiente frase: Poppins Bold (`fuentes/`), blanca con un borde negro fino, en el tercio de
-   abajo, sin tapar la cara ni salirse de x 60–1020 (en un vídeo de 1080 de ancho).
-3. Quemarlo con el ffmpeg del motor (`imageio_ffmpeg.get_ffmpeg_exe()`): filtro `subtitles=video.ass:fontsdir=fuentes`, el
-   audio igual (`-c:a copy`).
-4. Antes del vídeo entero, una foto para que la vea. La música y los efectos de sonido no van: se ponen al subir o en su
-   editor.
+No son uno de los 13 efectos, pero se pueden poner sobre el vídeo ya editado: las palabras con su segundo salen de
+`PY motor/palabras.py video.mp4`, y se queman con el ffmpeg del motor (`imageio_ffmpeg.get_ffmpeg_exe()`, filtro
+`subtitles`), con el audio igual. Frases cortas, abajo y sin taparle la cara. Enséñale una foto antes del vídeo entero.
 
 ## Si algo falla
 

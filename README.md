@@ -18,13 +18,15 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 1. Abre **Claude** en tu computadora, en la pestaña **Code** (en la pestaña Chat no funciona). Te vale cualquier carpeta.
 2. Pégale esto:
    ```
-   Instala los efectos de github.com/remonkevin99-collab/efectos en mi carpeta de skills
+   Instala los efectos de github.com/remonkevin99-collab/efectos en mi carpeta de skills, con todo lo que necesiten para funcionar
    ```
-3. Cuando te diga que terminó, cierra Claude y vuelve a abrirlo.
+3. **Claude te irá pidiendo permiso** para descargar e instalar lo que hace falta (Python, los modelos…): dale a Permitir. Solo
+   pasa la primera vez. En Mac, si te pide instalar las herramientas de Apple, acepta.
+4. Cuando te diga que terminó, cierra Claude y vuelve a abrirlo.
 
 ## Usarlo
 
-1. Arrastra tu vídeo al chat de Claude.
+1. En Claude, en la pestaña **Code**, arrastra tu vídeo a la caja donde escribes.
 2. Escribe el efecto y cuándo:
    ```
    /efectos órbita del segundo 2 al 5
@@ -36,7 +38,7 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 
 **Casi nunca sale perfecto a la primera:** míralo y pídele retoques con palabras normales («más pequeño», «más lento», «la palabra más arriba») hasta que te guste.
 
-¿Subtítulos? No son uno de los efectos, pero pídeselos («ponle subtítulos»). La música y los efectos de sonido no van incluidos: ponlos al subir o en tu editor.
+¿Subtítulos? Si quieres, pídele a Claude que se los ponga a tu vídeo. La música y los efectos de sonido no van incluidos: ponlos al subir o en tu editor.
 
 ## Los 13 efectos
 
