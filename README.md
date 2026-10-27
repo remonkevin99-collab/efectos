@@ -91,8 +91,9 @@ Haz esto en orden y dile a la persona cómo va.
    - Windows: `.venv\Scripts\python.exe efectos.py --comprobar`
 4. **Dile a la persona** que cierre Claude y lo vuelva a abrir: después ya puede escribir `/efectos`.
 
-Si falta Python 3.10–3.12, `instalar.sh` explica qué hacer. La forma más fácil es instalar [uv](https://docs.astral.sh/uv/),
-que baja Python solo. Cómo se usa después está en `SKILL.md`.
+Si la computadora no tiene Python 3.10–3.12, la instalación baja [uv](https://docs.astral.sh/uv/) y con él su propio Python,
+sin tocar el del sistema. En Mac, si dice «para tenerlo, corre 'xcode-select --install'», córrelo: se abre una ventana de
+Apple y la persona le da a Instalar; al acabar, vuelve a correr la instalación. Cómo se usa después está en `SKILL.md`.
 
 ## Sin Claude, desde la terminal
 
