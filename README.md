@@ -57,12 +57,12 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 | 11 | `lista` | Una lista que se va marcando sola |
 | 12 | `portada` | Te conviertes en la portada de una revista |
 | 13 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
-| 14 | `carrusel` | Tus Reels salen de tu móvil y giran encima de él; el de más vistas pasa por delante con su número |
-| 15 | `sobre-el-hombro` | La cámara se acerca y aparece una tarjeta de cristal con tu número subiendo y su gráfica |
-| 16 | `muro` | Detrás de ti, una página llena de texto con una palabra resaltada |
-| 17 | `mensajes` | Te llegan mensajes uno detrás de otro, como en el iPhone |
-| 18 | `interruptores` | Encima de tu cabeza, unos interruptores que se encienden uno a uno |
-| 19 | `cuadrícula` | Te alejas y caes en el centro de tu perfil, rodeado de tus Reels con sus vistas |
+| 14 | `carrusel` | Tus Reels salen de tu móvil y giran en anillo a su alrededor; el de más vistas queda delante con su número |
+| 15 | `sobre-el-hombro` | La cámara se acerca a un lado y luego al otro: tu número subiendo con su gráfica y tus Reels más vistos, detrás de tu cabeza |
+| 16 | `muro` | Detrás de ti, páginas de texto que cambian de letra, con una palabra resaltada siempre en su sitio |
+| 17 | `mensajes` | Te llegan mensajes encima de tu móvil: cada uno nuevo entra abajo y empuja los demás, como en el iPhone |
+| 18 | `interruptores` | Encima de tu cabeza, unos interruptores que se encienden uno a uno mientras la cámara se acerca |
+| 19 | `cuadrícula` | Caes en el centro de tu perfil y tus Reels llegan uno a uno a tu alrededor, con sus vistas |
 
 ## Antes de grabarte
 

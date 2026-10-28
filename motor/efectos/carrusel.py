@@ -1,16 +1,25 @@
-"""Carrusel: tus Reels salen de la pantalla del móvil y giran en un carrusel 3D encima de él.
+"""Carrusel: tus Reels salen de la pantalla del móvil y giran en un anillo que flota encima de él.
 
-En el plano hay un móvil (en la mano o de pie en la mesa, con la pantalla hacia la cámara). De su pantalla salen de 5 a 7
-tarjetas: nacen pequeñas en la pantalla, suben girando en espiral y en ~0,6 s se abren en un
-carrusel que gira despacio sobre un eje vertical, por encima del móvil. Las de delante, grandes y con su luz; las de
-atrás, más pequeñas y algo más oscuras. Al final se apagan con un fundido de 0,3 s (encogiéndose un poco).
+En el plano hay un móvil (en la mano o de pie en la mesa, con la pantalla hacia la cámara). De su pantalla salen de 5 a 10
+tarjetas (8 por defecto): nacen pequeñas en la parte de arriba de la pantalla y en ~0,3 s se abren en un anillo que flota
+JUSTO ENCIMA del móvil, con el eje en el móvil. Las de delante bajan un poco por delante del borde de arriba de la
+pantalla; las de atrás quedan detrás de las de delante, algo más altas y más pequeñas. El móvil se sigue viendo debajo
+(28 oct 2026: antes las fotos salían por encima del móvil, sin rodearlo).
 
-Con persona en el plano: las del fondo del carrusel pasan DETRÁS de ella (con su máscara y el color de verdad de su
-borde, como la órbita) y las de delante nunca le tapan la cara (si alguna la pisaría, baja lo justo). Sin persona (un
-plano del móvil solo), todas van por encima.
+El anillo arranca girando rápido (~65 px por cuadro delante, como la referencia) y a los ~0,6 s empieza a frenar. La
+tarjeta que se pida con `destaca` sale por delante, da una vuelta entera y vuelve a quedar delante, en el centro, justo
+cuando el anillo se queda casi quieto: a los 2,2 s (o justo antes del final); después gira muy despacio. Las tarjetas
+van de verdad pegadas al anillo (tangentes): en los lados se ven de canto, como en un carrusel 3D. Van nítidas, como las
+de ella: solo llevan un desenfoque de movimiento muy ligero en el arranque rápido. Al final se apagan con un fundido de
+0,3 s (encogiéndose un poco).
+
+Con persona en el plano: las de la parte de atrás del anillo pasan DETRÁS de ella (y del móvil, cuando el recorte lo
+incluye: el del Mac lo incluye si está en la mano), con su máscara y el color de verdad de su borde, como la órbita. Si
+hay una cara de verdad justo encima del móvil, las de delante nunca se la tapan: el anillo baja lo justo (o se hace más
+pequeño). Sin persona (un plano del móvil solo), todas van por encima.
 
 Cada tarjeta lleva abajo una pastilla con un ojo y sus vistas (`vistas`), y la que se pida con `destaca` lleva ese número
-grande con un brillo dorado DETRÁS de la letra (la letra, nítida encima). Esa tarjeta pasa por delante a mitad del efecto.
+grande con un brillo dorado DETRÁS de la letra (la letra, nítida encima).
 
 Las fotos:
   - `imagenes=<carpeta>`: las de esa carpeta (jpg, png o webp), ordenadas por nombre; si hay menos que `cantidad`, se
@@ -20,7 +29,7 @@ Las fotos:
 
     python efectos.py carrusel mi-video.mp4 --desde 2 --hasta 5 --op imagenes=mis-reels --op movil=540,1350
     python efectos.py carrusel mi-video.mp4 --desde 2 --hasta 5 --op imagenes=mis-reels --op "vistas=1M|120K|8K"
-        --op destaca=1M
+        --op destaca=1M --op ancho_movil=380
 """
 import math
 
@@ -43,32 +52,48 @@ OPCIONES = {
     'destaca': '',
     # dónde está la pantalla del móvil, en píxeles de un vídeo de 1080 × 1920 («x,y»: su centro)
     'movil': '540,1350',
-    # el ancho del móvil en el vídeo (en píxeles de 1080 de ancho): marca cuánto suben las tarjetas por encima de él
+    # el ancho del móvil en el vídeo (en píxeles de 1080 de ancho)
     'ancho_movil': '240',
-    # cuántas tarjetas (de 5 a 7)
-    'cantidad': '6',
+    # el alto del móvil en el vídeo (en píxeles de 1080 de ancho). Marca su borde de arriba: el anillo flota justo encima.
+    # Vacío = 2 veces el ancho (un móvil de frente). Si el móvil está muy inclinado hacia atrás, se ve más bajo: ponlo
+    'alto_movil': '',
+    # cuántas tarjetas (de 5 a 10)
+    'cantidad': '8',
     # el ancho de la tarjeta de delante, en píxeles de 1080 de ancho (si el carrusel no cabe, se hace más pequeño)
     'tamano': '260',
-    # el ritmo del giro: 1 = una vuelta cada 8 s; 2 = el doble de rápido; en negativo, gira al revés
+    # la forma de las tarjetas: «9:16» (como un Reel) o «3:4» (como en la cuadrícula del perfil)
+    'proporcion': '9:16',
+    # el giro lento del final: 1 = una vuelta cada 30 s; 2 = el doble de rápido; 0 = se para; en negativo, gira al revés.
+    # El arranque rápido es siempre una vuelta entera que frena (la destacada vuelve delante)
     'velocidad': '1',
 }
 DURACION = 3.0
 
-VUELTA = 8.0            # segundos por vuelta con velocidad 1
-EMPUJE = 0.8            # radianes de más que gira al salir (arranca rápido y frena hasta su ritmo: salen en espiral)
-EMPUJE_DURA = 1.2       # en cuánto frena ese empuje
-SALIDA = 0.5            # lo que tarda cada tarjeta en ir de la pantalla a su sitio
-ESCALON = 0.03          # cada tarjeta sale un poco después que la anterior (con 7, la última llega a los 0,68 s)
-APARECE = 0.2           # el fundido de entrada de cada tarjeta
+VUELTA = 30.0           # segundos por vuelta del giro lento del final, con velocidad 1 (casi quieto, pero vivo)
+FRENTE = 2.2            # a qué segundo termina la vuelta entera y la destacada queda delante (si el efecto es corto,
+                        # antes: justo antes del fundido, que es cuando se corta). Medido en la referencia: 2,2 s
+LLENO = 0.27            # la parte de ese tiempo que gira a toda velocidad; después frena en línea recta (la referencia:
+                        # ~65 px por cuadro hasta los 0,6 s y frenando hasta pararse a los 2,2 s)
+SALIDA = 0.35           # lo que tarda el anillo en abrirse desde la pantalla (frena al final: casi todo en 0,15 s)
+APARECE = 0.2           # el fundido de entrada
 FUNDIDO = 0.3           # el fundido del final
-INICIO = 0.12           # el tamaño con el que nacen en la pantalla (veces el suyo)
-INCLINA = math.radians(16)   # la cámara mira el carrusel un poco desde arriba: las de atrás quedan algo más altas
-LEJOS = 3.6             # la distancia de la cámara (veces el radio): menos = más perspectiva
-GIRO_LADO = math.radians(30) # cuánto se giran las tarjetas en los lados (nunca de canto: siempre se ven)
-OSCURO_ATRAS = 0.38     # cuánto se oscurece la de más atrás
+INICIO = 0.18           # el tamaño con el que nacen las tarjetas en la pantalla (veces el suyo)
+INICIO_R = 0.1          # y el del anillo
+NACE = 0.28             # dónde nacen: a esta parte del alto del móvil, desde su borde de arriba
+SOLAPE = 0.16           # cuánto bajan las de delante por delante del móvil (veces el ancho del móvil)
+RADIO = 1.65            # el radio del anillo (veces el ancho de la tarjeta), como la referencia
+INCLINA = math.radians(8)    # la cámara mira el anillo un poco desde arriba: las de atrás quedan algo más altas
+LEJOS = 5.9             # la distancia de la cámara (veces el radio): la de atrás sale al ~70 % de la de delante
+OSCURO_ATRAS = 0.3      # cuánto se oscurece la de más atrás
 DETRAS = -0.5           # de qué profundidad (1 = delante, −1 = atrás) para atrás van detrás de la persona
 CRUCE = 0.12            # cuánto antes y después de esa profundidad se desvanece la que cruza por encima de la persona
+OBTURADOR = 0.15        # un desenfoque de movimiento muy ligero: lo que recorre en 0,15 de cuadro (a ~65 px por cuadro,
+                        # 10 px). Con 0,5 (una cámara a 180°) las tarjetas se emborronan y no se parece al de la referencia, que
+                        # va nítido; sin nada, el contenido de las tarjetas «salta» en el arranque rápido
+PASO_BORRON = 3         # una copia de la tarjeta cada tantos px de ese recorrido (a 1080 de ancho): sin escalones
+BORRON_MAX = 6          # y como mucho tantas copias
 MARGEN = 60             # la zona segura (a 1080 de ancho)
+ARRIBA = 210            # y lo más alto que puede llegar el anillo (a 1920 de alto)
 NIVELES = [1.0, 0.707, 0.5, 0.354, 0.25, 0.177, 0.125]   # las copias de cada tarjeta, de grande a pequeña
 
 
@@ -95,6 +120,20 @@ def _punto(v, defecto):
     if s:
         print(f'  Aviso (carrusel): «{v}» en `movil` no es «x,y»; uso {defecto[0]:g},{defecto[1]:g}.')
     return defecto
+
+
+def _proporcion(v):
+    """«9:16» → 16/9 (alto entre ancho). También «3:4», «9/16» o «1,78»."""
+    s = str(v or '').strip().replace('/', ':').replace(',', '.')
+    try:
+        if ':' in s:
+            a, b = (float(x) for x in s.split(':', 1))
+            return max(0.5, min(3.0, b / a))
+        return max(0.5, min(3.0, float(s)))
+    except (ValueError, ZeroDivisionError):
+        if s:
+            print(f'  Aviso (carrusel): «{v}» en `proporcion` no es «9:16» ni «3:4»; uso 9:16.')
+        return 16 / 9
 
 
 def _vistas(v):
@@ -163,10 +202,16 @@ def _pastilla(vista, cw):
 
 
 def _brillo_dorado(w, h, cx, cy, rx, ry, fuerza=0.9):
-    """Un brillo dorado redondo (en float, sin escalones), como capa RGBA w × h."""
+    """Un brillo dorado redondo con rayos de luz que salen del centro (en float, sin escalones), como capa RGBA w × h."""
     ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
-    d2 = ((xs - cx) / rx) ** 2 + ((ys - cy) / ry) ** 2
-    a = np.clip(fuerza * np.exp(-1.6 * d2), 0, 1)
+    dx, dy = (xs - cx) / rx, (ys - cy) / ry
+    d2 = dx ** 2 + dy ** 2
+    a = fuerza * np.exp(-1.6 * d2)
+    # los rayos (como el número grande de la referencia): finos, de largo distinto, y se apagan hacia fuera
+    ang = np.arctan2(dy, dx)
+    rayos = np.clip(np.cos(12 * ang), 0, 1) ** 6 * (0.55 + 0.45 * np.cos(5 * ang + 0.7) ** 2)
+    a = a + 0.85 * rayos * np.exp(-0.55 * d2) * np.clip(np.sqrt(d2) / 0.35, 0, 1)
+    a = np.clip(a, 0, 1)
     rgb = np.empty((h, w, 3), np.float32)
     # del centro, casi blanco cálido, hacia el borde, oro
     k = np.exp(-3.5 * d2)[..., None]
@@ -183,7 +228,7 @@ def _numero(cara, numero, cw, ch):
         k = 0.86 * cw / txt.width
         txt = _justo(B.texto(numero, tam * k, 'extrabold', relleno=(255, 250, 236, 255)))
     cx, cy = cw / 2, 0.58 * ch                            # por debajo del título de la portada
-    # 1) el brillo redondo, detrás
+    # 1) el brillo redondo, con sus rayos, detrás
     cara.alpha_composite(_brillo_dorado(cw, ch, cx, cy, 0.62 * cw, 0.42 * cw, 0.92))
     # 2) un resplandor con la forma del número, también detrás
     pad = int(0.12 * cw)
@@ -217,7 +262,7 @@ def _tarjeta(foto, cw, ch, u, vista='', numero=''):
         p = _pastilla(vista, cw)
         cara.alpha_composite(p, (int(round((cw - p.width) / 2)), int(round(ch - 0.055 * ch - p.height))))
     cara = B.recortar_redondo(cara, r)
-    cara.alpha_composite(B.caja(cw, ch, r, (0, 0, 0, 0), borde=(255, 255, 255, 215), grosor=max(1.0, 2.0 * u)))
+    cara.alpha_composite(B.caja(cw, ch, r, (0, 0, 0, 0), borde=(255, 255, 255, 170), grosor=max(1.0, 2.0 * u)))
     capa = B.con_sombra(cara, 16 * u, 10 * u, 115)
     return _premultiplicada(capa), (capa.width - cw) // 2
 
@@ -236,7 +281,8 @@ def _fotos(c, cantidad):
             return fotos
     W, H = c.W, c.H
     tw, th = int(W * 0.42), int(W * 0.56)
-    sitios = [(0.05, 0.03), (0.52, 0.06), (0.0, 0.62), (0.55, 0.58), (0.28, 0.30), (0.3, 0.74), (0.6, 0.35)]
+    sitios = [(0.05, 0.03), (0.52, 0.06), (0.0, 0.62), (0.55, 0.58), (0.28, 0.30), (0.3, 0.74), (0.6, 0.35),
+              (0.15, 0.45), (0.45, 0.15), (0.7, 0.7)]
     out = []
     for fx, fy in sitios[:cantidad]:
         x0, y0 = int(fx * (W - tw)), int(fy * (H - th))
@@ -245,13 +291,16 @@ def _fotos(c, cantidad):
 
 
 # ── La geometría ────────────────────────────────────────────────────────────────────────────────────────────────────
-def _esquinas(e, phi):
+def _esquinas(e, phi, g=None):
     """Las 4 esquinas en pantalla (arriba izq., arriba der., abajo der., abajo izq.) de la tarjeta en el ángulo `phi` del
-    carrusel (0 = delante), y su profundidad (1 = delante, −1 = atrás)."""
-    R, w, h = e['R'], e['w'], e['h']
+    anillo (0 = delante), y su profundidad (1 = delante, −1 = atrás). `g`: el anillo en ese momento (radio, tamaño de la
+    tarjeta y centro; mientras se abre es más pequeño). La tarjeta va tangente al anillo: en los lados se ve de canto.
+    Cuando se ve por su cara de dentro, se da la vuelta para que la foto se lea bien (en ese cambio está de canto: no
+    salta). Devuelve (None, z) si está tan de canto que no se ve."""
+    g = g or e
+    R, w, h = g['R'], g['w'], g['h']
     X, Z = R * math.sin(phi), -R * math.cos(phi)               # Z: hacia el fondo
-    psi = GIRO_LADO * math.sin(phi)                          # en los lados se gira un poco hacia fuera
-    rx, rz = math.cos(psi), math.sin(psi)
+    rx, rz = math.cos(phi), math.sin(phi)                     # tangente al anillo
     ct, st = math.cos(INCLINA), math.sin(INCLINA)
     D, f = e['D'], e['f']
     out = np.empty((4, 2), np.float64)
@@ -262,42 +311,70 @@ def _esquinas(e, phi):
         yy = y * ct - z * st                                 # la cámara, un poco desde arriba
         zz = y * st + z * ct
         p = f / (D + zz)
-        out[j] = (e['Cx'] + x * p, e['Cy'] + yy * p)
+        out[j] = (g['Cx'] + x * p, g['Cy'] + yy * p)
+    x_, y_ = out[:, 0], out[:, 1]
+    area = 0.5 * float(np.dot(x_, np.roll(y_, -1)) - np.dot(np.roll(x_, -1), y_))
+    alto = 0.5 * (abs(out[3, 1] - out[0, 1]) + abs(out[2, 1] - out[1, 1]))
+    if abs(area) < 0.8 * max(1.0, alto) * e['u']:           # de canto: menos de ~1 px de ancho
+        return None, math.cos(phi)
+    if area < 0:                                             # se ve por dentro: la foto, al derecho
+        out = out[[1, 0, 3, 2]]
     return out, math.cos(phi)
 
 
 def _giro(t, e):
-    """El ángulo girado hasta `t` (solo depende de `t`: da igual el orden de los cuadros). Arranca con un empujón que
-    frena suave hasta su ritmo (sin saltos de velocidad)."""
-    return e['w0'] * t + e['empuje'] * B.sale(B.tramo(t, 0.0, EMPUJE_DURA))
+    """El ángulo girado hasta `t` (solo depende de `t`: da igual el orden de los cuadros). Gira a toda velocidad hasta
+    `e['lleno']` s, frena en línea recta (sin saltos de velocidad) y a los `e['frente']` s ha dado justo una vuelta y va
+    al giro lento."""
+    t1, L = e['lleno'], e['frente'] - e['lleno']
+    if t <= t1:
+        g = t
+    elif t <= e['frente']:
+        g = t - (t - t1) ** 2 / (2 * L)
+    else:
+        g = t1 + L / 2
+    return e['w0'] * t + e['empuje'] * g
+
+
+def _abre(t):
+    """Cuánto se ha abierto el anillo (0 = en la pantalla, 1 = en su sitio)."""
+    return B.sale(B.tramo(t, 0.0, SALIDA))
+
+
+def _anillo(e, k):
+    """El anillo cuando se ha abierto `k`: sale de la pantalla pequeño y crece mientras sube a su sitio."""
+    s = INICIO + (1.0 - INICIO) * k
+    return {'R': e['R'] * (INICIO_R + (1.0 - INICIO_R) * k), 'w': e['w'] * s, 'h': e['h'] * s,
+            'Cx': e['mx'] + (e['Cx'] - e['mx']) * k, 'Cy': e['Cy0'] + (e['Cy'] - e['Cy0']) * k}
 
 
 def _profundidad(e, k, t):
     """La profundidad de la tarjeta k en el segundo t (1 = delante, −1 = atrás), contando que al salir nace delante."""
-    ini = k * ESCALON
-    sa = B.suave(B.tramo(t, ini, ini + SALIDA))
     z = math.cos(e['phi0'] + 2 * math.pi * k / e['n'] + _giro(t, e))
-    return 1.0 + (z - 1.0) * sa
+    return 1.0 + (z - 1.0) * _abre(t)
 
 
 def _alcance(e):
-    """(izquierda, derecha, arriba) de todo el carrusel en una vuelta, respecto a su centro."""
+    """(izquierda, derecha, arriba, abajo de la de delante) de todo el anillo en una vuelta, respecto a su centro."""
     iz = de = 0.0
     arriba = math.inf
     for phi in np.linspace(0, 2 * math.pi, 73):
         q, _ = _esquinas(e, phi)
+        if q is None:
+            continue
         iz, de = max(iz, e['Cx'] - q[:, 0].min()), max(de, q[:, 0].max() - e['Cx'])
         arriba = min(arriba, q[:, 1].min())
-    return iz, de, arriba
+    q, _ = _esquinas(e, 0.0)
+    return iz, de, arriba, q[:, 1].max()
 
 
 def _choca_cara(e, cara):
-    """Cuánto habría que bajar el carrusel para que ninguna tarjeta que va por encima de la persona le pise la cara."""
+    """Cuánto habría que bajar el anillo para que ninguna tarjeta que va por encima de la persona le pise la cara."""
     fx, fb, fa = cara
     peor = 0.0
     for phi in np.linspace(0, 2 * math.pi, 73):
         q, z = _esquinas(e, phi)
-        if z < DETRAS:
+        if q is None or z < DETRAS:
             continue
         if q[:, 0].max() < fx - fa or q[:, 0].min() > fx + fa:
             continue
@@ -308,7 +385,7 @@ def _choca_cara(e, cara):
 def _preparar(c):
     u = c.u
     W, H = c.W, c.H
-    cantidad = int(min(7, max(5, round(_num(c.op.get('cantidad'), 6)))))
+    cantidad = int(min(10, max(5, round(_num(c.op.get('cantidad'), 8)))))
     fotos = _fotos(c, cantidad)
     if not fotos:
         raise ValueError('no hay ninguna imagen para las tarjetas')
@@ -329,86 +406,112 @@ def _preparar(c):
     mx, my = _punto(c.op.get('movil'), (540.0, 1350.0))
     mx, my = mx * W / 1080.0, my * H / 1920.0
     am = max(40.0, _num(c.op.get('ancho_movil'), 240)) * u
+    hm = _num(c.op.get('alto_movil'), 0) * u
+    hm = hm if hm > am * 0.5 else 2.0 * am
+    techo = my - hm / 2                                        # el borde de arriba del móvil
+    prop = _proporcion(c.op.get('proporcion'))
 
     w = max(60.0, _num(c.op.get('tamano'), 260)) * u
-    e = {'n': n, 'mx': mx, 'my': my, 'am': am, 'hk': hk}
+    e = {'n': n, 'mx': mx, 'my': my, 'am': am, 'hk': hk, 'u': u, 'techo': techo}
 
-    def medidas(w):
-        h = w * 4 / 3
-        R = max(0.56 * w / math.sin(math.pi / n), 1.55 * w)  # abierto, y que las de delante no se pisen
+    def medidas(w, baja=0.0):
+        h = w * prop
+        R = max(0.6 * w / math.sin(math.pi / n), RADIO * w)   # abierto, y que las de delante no se pisen
         D = LEJOS * R
-        e.update(w=w, h=h, R=R, D=D, f=D - R * math.cos(INCLINA), Cx=mx, Cy=0.0)
-        # la de delante, con su borde de abajo un poco dentro de la parte de arriba de la pantalla
-        e['Cy'] = my - 0.35 * am - h / 2 - R * math.sin(INCLINA)
+        e.update(w=w, h=h, R=R, D=D, f=D - R * math.cos(INCLINA), Cx=e.get('Cx', mx), Cy=0.0)
+        # la de delante, con su borde de abajo un poco por delante del borde de arriba del móvil
+        q, _ = _esquinas(e, 0.0)
+        e['Cy'] = techo + SOLAPE * am + baja - q[:, 1].max()
 
+    e['Cx'] = mx
     medidas(w)
-    # que quepa en la zona segura: todo es proporcional al tamaño, así que se encoge entero
+    # que quepa en la zona segura, de lado: todo es proporcional al tamaño, así que se encoge entero
     util = W - 2 * MARGEN * u
-    iz, de, _ = _alcance(e)
+    iz, de, _, _ = _alcance(e)
     if iz + de > util:
-        medidas(w * util / (iz + de) * 0.995)
-    iz, de, arriba = _alcance(e)
+        medidas(e['w'] * util / (iz + de) * 0.995)
+    # y por arriba: si sube más de la cuenta, más pequeño (con el borde de abajo en su sitio)
+    for _ in range(4):
+        iz, de, arriba, abajo = _alcance(e)
+        if arriba >= ARRIBA * H / 1920.0:
+            break
+        medidas(e['w'] * max(0.3, (abajo - ARRIBA * H / 1920.0) / max(1.0, abajo - arriba)) * 0.995)
+    iz, de, _, _ = _alcance(e)
     e['Cx'] = min(max(mx, MARGEN * u + iz), W - MARGEN * u - de)
-    if arriba < 40 * u:                                        # que no se salga por arriba
-        e['Cy'] += 40 * u - arriba
 
-    # con persona (y su cara por encima del móvil): que las de delante no le pisen la cara
+    # con una cara de verdad justo encima del móvil: que las de delante no se la pisen. Si el motor no encuentra cara, da
+    # una aproximada (que puede caer en el árbol de detrás o en una foto de la pantalla): solo vale si es persona (su
+    # máscara) y está por encima del móvil
     hay = float(c.mascara[::8, ::8].max()) > 0.5
     cx, cy, fw = c.cara
-    e['cara'] = hay and (cy + 0.85 * fw < my - 0.2 * am)
+    x0, x1 = int(max(0, cx - fw / 2)), int(min(W, cx + fw / 2))
+    y0, y1 = int(max(0, cy - fw / 2)), int(min(H, cy + fw / 2))
+    es_persona = x1 > x0 and y1 > y0 and float(c.mascara[y0:y1, x0:x1].mean()) > 0.5
+    e['cara'] = hay and es_persona and (cy + 0.85 * fw < techo)
     if e['cara']:
+        baja = 0.0
         for _ in range(6):
-            baja = _choca_cara(e, (cx, cy + 0.85 * fw + 12 * u, 0.75 * fw))
-            if baja <= 0:
+            mas = _choca_cara(e, (cx, cy + 0.85 * fw + 12 * u, 0.75 * fw))
+            if mas <= 0:
                 break
-            hueco = (my + 0.5 * am) - (e['Cy'] + e['R'] * math.sin(INCLINA) + e['h'] / 2)   # lo que puede bajar
-            if baja <= hueco:
-                e['Cy'] += baja
+            hueco = max(0.0, (my - techo) - SOLAPE * am - baja)   # puede bajar hasta la mitad de la pantalla
+            if mas <= hueco:
+                baja += mas
+                medidas(e['w'], baja)
                 break
-            e['Cy'] += max(0.0, hueco)
-            cy_antes = e['Cy']
-            medidas(e['w'] * 0.9)                              # no cabe bajando: más pequeño
-            e['Cy'] = max(e['Cy'], cy_antes)
-            iz, de, _ = _alcance(e)
+            baja += hueco
+            medidas(e['w'] * 0.9, baja)                        # no cabe bajando: más pequeño
+            iz, de, _, _ = _alcance(e)
             e['Cx'] = min(max(mx, MARGEN * u + iz), W - MARGEN * u - de)
 
-    # el giro: la tarjeta destacada (o la primera) pasa por delante a mitad del giro
-    vel = _num(c.op.get('velocidad'), 1)
-    e['w0'] = 2 * math.pi * vel / VUELTA
-    e['empuje'] = EMPUJE * (1 if vel >= 0 else -1)
-    t_frente = 0.5 * ((n - 1) * ESCALON + SALIDA + max(c.dur - FUNDIDO, (n - 1) * ESCALON + SALIDA + 0.1))
-    e['phi0'] = -(2 * math.pi * hk / n + _giro(t_frente, e))
+    # dónde nace: en la parte de arriba de la pantalla
+    e['Cy0'] = techo + NACE * hm - INICIO_R * e['R'] * math.sin(INCLINA)
 
-    # las tarjetas, en copias de varios tamaños (reducir mucho al vuelo hace dientes) y con el número de la destacada
+    # el giro: la destacada (o la primera) sale delante, da una vuelta entera frenando y vuelve delante a los `frente` s
+    vel = _num(c.op.get('velocidad'), 1)
+    signo = -1.0 if vel < 0 else 1.0
+    e['w0'] = 2 * math.pi * vel / VUELTA
+    e['frente'] = min(FRENTE, max(0.9, 0.98 * (c.dur - FUNDIDO)))
+    e['lleno'] = LLENO * e['frente']
+    e['empuje'] = (signo * 2 * math.pi - e['w0'] * e['frente']) / (e['lleno'] + (e['frente'] - e['lleno']) / 2)
+    e['phi0'] = -2 * math.pi * hk / n
+
+    # las tarjetas, en copias de varios tamaños (reducir mucho al vuelo hace dientes); la destacada, con su número
     e['capas'] = []
-    e['con_numero'] = None
     for k in range(n):
         foto = fotos[idx[k]]
         lleva_num = bool(destaca) and k == hk
         vista = '' if (lleva_num and vista_de[k] and _igual(vista_de[k], destaca)) else vista_de[k]
-        sin, con = [], []
+        copias = []
         for L in NIVELES:
             cw, ch = max(8, int(round(e['w'] * L))), max(8, int(round(e['h'] * L)))
-            sin.append(_tarjeta(foto, cw, ch, u * L, vista) + (cw, ch))
-            if lleva_num:
-                con.append(_tarjeta(foto, cw, ch, u * L, vista, destaca) + (cw, ch))
-        e['capas'].append(sin)
-        if lleva_num:
-            e['con_numero'] = (k, con)
+            copias.append(_tarjeta(foto, cw, ch, u * L, vista, destaca if lleva_num else '') + (cw, ch))
+        e['capas'].append(copias)
     return e
 
 
 # ── Pintar ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 def _deformar(nivel, quad, W, H):
-    """La copia de la tarjeta llevada a las 4 esquinas `quad` (perspectiva) → (capa, X0, Y0) o None."""
+    """La copia de la tarjeta llevada a las 4 esquinas `quad` (perspectiva) → (capa, X0, Y0) o None. Si sale mucho más
+    estrecha que la copia (de canto), antes se estrecha la copia con un filtro de área: si no, la foto hace dientes."""
     capa, pad, cw, ch = nivel
     lh, lw = capa.shape[:2]
-    src = np.float32([[pad - 0.5, pad - 0.5], [pad + cw - 0.5, pad - 0.5], [pad + cw - 0.5, pad + ch - 0.5],
-                      [pad - 0.5, pad + ch - 0.5]])
+    ancho = max(np.linalg.norm(quad[1] - quad[0]), np.linalg.norm(quad[2] - quad[3]))
+    kx = 1.0
+    if ancho < 0.7 * cw:
+        nw = max(4, int(round(lw * ancho / cw / 0.7)))
+        if nw < lw:
+            capa = cv2.resize(capa, (nw, lh), interpolation=cv2.INTER_AREA)
+            kx = nw / lw
+            lw = nw
+    src = np.float32([[pad * kx - 0.5, pad - 0.5], [(pad + cw) * kx - 0.5, pad - 0.5],
+                      [(pad + cw) * kx - 0.5, pad + ch - 0.5], [pad * kx - 0.5, pad + ch - 0.5]])
     dst = np.float32(quad - 0.5)
     M = cv2.getPerspectiveTransform(src, dst)
     borde = np.float32([[[-0.5, -0.5]], [[lw - 0.5, -0.5]], [[lw - 0.5, lh - 0.5]], [[-0.5, lh - 0.5]]])
     fuera = cv2.perspectiveTransform(borde, M).reshape(4, 2)
+    if not np.all(np.isfinite(fuera)):
+        return None
     X0, Y0 = max(0, int(math.floor(fuera[:, 0].min())) - 1), max(0, int(math.floor(fuera[:, 1].min())) - 1)
     X1, Y1 = min(W, int(math.ceil(fuera[:, 0].max())) + 2), min(H, int(math.ceil(fuera[:, 1].max())) + 2)
     if X1 <= X0 or Y1 <= Y0:
@@ -419,10 +522,11 @@ def _deformar(nivel, quad, W, H):
     return hecha, X0, Y0
 
 
-def _tarjeta_en(e, k, quad, W, H, numero):
-    """La tarjeta k en su sitio, mezclando las dos copias de tamaño más cercanas (sin saltos de nitidez al crecer)."""
+def _tarjeta_en(e, k, quad, W, H):
+    """La tarjeta k en su sitio, mezclando las dos copias de tamaño más cercanas (sin saltos de nitidez al crecer). La
+    copia se escoge por el alto (de canto, el ancho lo arregla `_deformar`)."""
     lados = np.linalg.norm(np.roll(quad, -1, axis=0) - quad, axis=1)
-    s = max(max(lados[0], lados[2]) / e['w'], max(lados[1], lados[3]) / e['h'])
+    s = max(lados[1], lados[3]) / e['h']
     if s >= NIVELES[0]:
         partes = [(0, 1.0)]
     elif s <= NIVELES[-1]:
@@ -431,30 +535,24 @@ def _tarjeta_en(e, k, quad, W, H, numero):
         i = max(j for j in range(len(NIVELES)) if NIVELES[j] >= s)
         k_ = math.log(NIVELES[i] / s) / math.log(NIVELES[i] / NIVELES[i + 1])
         partes = [(i, 1.0)] if k_ < 0.01 else [(i, 1.0 - k_), (i + 1, k_)]
-    sin = e['capas'][k]
-    con = e['con_numero'][1] if (numero > 0.003 and e['con_numero'] and e['con_numero'][0] == k) else None
+    copias = e['capas'][k]
+    return _juntar([(_deformar(copias[i], quad, W, H), p) for i, p in partes])
 
-    def copia(i):
-        if con is None:
-            return sin[i]
-        if numero >= 0.997:
-            return con[i]
-        return (sin[i][0] * np.float32(1 - numero) + con[i][0] * np.float32(numero),) + sin[i][1:]
 
-    partes = [(copia(i), p) for i, p in partes]
-    hechas = [(_deformar(cp, quad, W, H), p) for cp, p in partes]
-    hechas = [(h, p) for h, p in hechas if h is not None]
-    if not hechas:
+def _juntar(partes):
+    """Suma capas ya deformadas [((capa, X0, Y0), peso), …] en una sola (las que son None no suman nada)."""
+    partes = [(h, p) for h, p in partes if h is not None]
+    if not partes:
         return None
-    if len(hechas) == 1:
-        return hechas[0][0]
-    (a, ax, ay), pa = hechas[0]
-    (b, bx, by), pb = hechas[1]
-    X0, Y0 = min(ax, bx), min(ay, by)
-    X1, Y1 = max(ax + a.shape[1], bx + b.shape[1]), max(ay + a.shape[0], by + b.shape[0])
+    if len(partes) == 1 and abs(partes[0][1] - 1.0) < 1e-6:
+        return partes[0][0]
+    X0 = min(h[1] for h, _ in partes)
+    Y0 = min(h[2] for h, _ in partes)
+    X1 = max(h[1] + h[0].shape[1] for h, _ in partes)
+    Y1 = max(h[2] + h[0].shape[0] for h, _ in partes)
     out = np.zeros((Y1 - Y0, X1 - X0, 4), np.float32)
-    out[ay - Y0:ay - Y0 + a.shape[0], ax - X0:ax - X0 + a.shape[1]] += a * np.float32(pa)
-    out[by - Y0:by - Y0 + b.shape[0], bx - X0:bx - X0 + b.shape[1]] += b * np.float32(pb)
+    for (a, ax, ay), p in partes:
+        out[ay - Y0:ay - Y0 + a.shape[0], ax - X0:ax - X0 + a.shape[1]] += a * np.float32(p)
     return out, X0, Y0
 
 
@@ -485,50 +583,73 @@ def _componer(c, hecha, alfa, tapa, brillo, persona):
     cv2.add(zona, nuevo, dst=zona)
 
 
+def _quad_en(e, c, k, ts):
+    """Las esquinas de la tarjeta k en el segundo `ts` (con el anillo abriéndose, el encogerse del final y sin pisar la
+    cara) y su profundidad ahora (al salir de la pantalla, delante). (None, profundidad) si está de canto."""
+    abre = _abre(ts)
+    phi = e['phi0'] + 2 * math.pi * k / e['n'] + _giro(ts, e)
+    quad, z = _esquinas(e, phi, _anillo(e, abre))
+    zc = 1.0 + (z - 1.0) * abre
+    if quad is None:
+        return None, zc
+    # al final, se encoge un poco mientras se apaga
+    fin = B.suave(B.tramo(c.dur - ts, 0.0, FUNDIDO))
+    cq = quad.mean(axis=0)
+    quad = cq + (quad - cq) * (0.88 + 0.12 * fin)
+    # nunca encima de la cara: si una de las de encima la pisaría, baja lo justo
+    tapa = 1.0 - B.suave(B.tramo(zc, DETRAS - 0.02, DETRAS + 0.02))
+    if e['cara'] and tapa < 0.999:
+        cx, cy, fw = c.cara
+        x0, x1 = quad[:, 0].min(), quad[:, 0].max()
+        solape = min(x1, cx + 0.75 * fw) - max(x0, cx - 0.75 * fw)
+        if solape > 0:
+            baja = max(0.0, (cy + 0.85 * fw + 8 * c.u) - quad[:, 1].min())
+            quad = quad + np.array([0.0, baja * (1.0 - tapa) * min(1.0, solape / (30 * c.u))])
+    return quad, zc
+
+
 def dibujar(c):
     if 'carrusel' not in c.estado:
         c.estado['carrusel'] = _preparar(c)
     e = c.estado['carrusel']
     u, t = c.u, c.t
     n = e['n']
-    mx, my = e['mx'], e['my']
 
-    girado = _giro(t, e)
     fin = B.suave(B.tramo(c.queda, 0.0, FUNDIDO))
-    numero = B.suave(B.tramo(t, 0.45, 0.8))                  # el número grande se enciende cuando ya han salido
-    cx, cy, fw = c.cara
+    entra = B.suave(B.tramo(t, 0.0, APARECE))
+    dt = OBTURADOR / (2.0 * max(1.0, c.fps))                  # medio obturador a cada lado del cuadro
     tarjetas = []
     for k in range(n):
-        ini = k * ESCALON
-        alfa = B.suave(B.tramo(t, ini, ini + APARECE)) * fin
+        alfa = entra * fin
         if alfa <= 0.003:
             continue
-        phi = e['phi0'] + 2 * math.pi * k / n + girado
-        destino, z = _esquinas(e, phi)
-        # de la pantalla a su sitio: nace pequeña en la pantalla y va creciendo mientras sube (con curva suave)
-        sa = B.suave(B.tramo(t, ini, ini + SALIDA))
-        centro = destino.mean(axis=0)
-        nace = (destino - centro) * INICIO + np.array([mx, my])
-        quad = nace + (destino - nace) * sa
-        # al final, se encoge un poco mientras se apaga
-        cq = quad.mean(axis=0)
-        quad = cq + (quad - cq) * (0.88 + 0.12 * fin)
-        zc = 1.0 + (z - 1.0) * sa                              # su profundidad ahora (en la pantalla, delante)
-        tapa = 1.0 - B.suave(B.tramo(zc, DETRAS - 0.02, DETRAS + 0.02))
-        # nunca encima de la cara: si una de las de encima la pisaría, baja lo justo
-        if e['cara'] and tapa < 0.999:
-            x0, x1 = quad[:, 0].min(), quad[:, 0].max()
-            solape = min(x1, cx + 0.75 * fw) - max(x0, cx - 0.75 * fw)
-            if solape > 0:
-                baja = max(0.0, (cy + 0.85 * fw + 8 * u) - quad[:, 1].min())
-                quad = quad + np.array([0.0, baja * (1.0 - tapa) * min(1.0, solape / (30 * u))])
-        brillo = 1.0 - OSCURO_ATRAS * ((1.0 - zc) / 2.0) ** 1.2
-        hecha = _tarjeta_en(e, k, quad, c.W, c.H, numero)
+        quad, zc = _quad_en(e, c, k, t)
+        # el desenfoque de movimiento: lo que recorre la tarjeta mientras el obturador está abierto. En el arranque rápido
+        # se pinta en varias posiciones seguidas, sumadas (una cada PASO_BORRON px); despacio, una sola
+        qa, _ = _quad_en(e, c, k, t - dt)
+        qb, _ = _quad_en(e, c, k, t + dt)
+        mov = 0.0
+        for p, q, x in ((qa, quad, 2.0), (quad, qb, 2.0), (qa, qb, 1.0)):
+            if p is not None and q is not None:
+                mov = max(mov, x * float(np.linalg.norm(q - p, axis=1).max()))
+        veces = 1 if mov < PASO_BORRON * u else min(BORRON_MAX, 1 + int(math.ceil(mov / (PASO_BORRON * u))))
+        if veces == 1:
+            if quad is None:
+                continue
+            hecha = _tarjeta_en(e, k, quad, c.W, c.H)
+        else:
+            partes = []
+            for j in range(veces):
+                q, _ = _quad_en(e, c, k, t - dt + 2 * dt * j / (veces - 1))
+                partes.append((_tarjeta_en(e, k, q, c.W, c.H) if q is not None else None, 1.0 / veces))
+            hecha = _juntar(partes)
         if hecha is None:
             continue
+        tapa = 1.0 - B.suave(B.tramo(zc, DETRAS - 0.02, DETRAS + 0.02))
+        brillo = 1.0 - OSCURO_ATRAS * ((1.0 - zc) / 2.0) ** 1.2
         # al pasar de delante a detrás (o al revés) ENCIMA de la persona, la tarjeta se desvanece y vuelve a aparecer: así
-        # no desaparece de golpe detrás del pecho. Si en ese momento va a su lado (sin tocarla), no cambia nada
-        # (el margen es de profundidad en el giro lento, y de tiempo al salir, que cruzan en un cuadro: ±0,1 s)
+        # no desaparece de golpe detrás del pecho (o del móvil). Si en ese momento va a su lado (sin tocarla), no cambia
+        # nada (el margen es de profundidad en el giro lento, y de tiempo al salir, que cruzan en un cuadro: ±0,1 s)
         rapidez = abs(_profundidad(e, k, t + 0.04) - _profundidad(e, k, t - 0.04)) / 0.08
         cerca = 1.0 - B.suave(B.tramo(abs(zc - DETRAS), 0.01, max(CRUCE, 0.1 * rapidez)))
         if cerca > 0.003:

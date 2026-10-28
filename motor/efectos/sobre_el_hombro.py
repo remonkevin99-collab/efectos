@@ -1,29 +1,43 @@
-"""sobre-el-hombro: la cámara se acerca hacia una esquina de arriba (la del lado de la cara donde hay más sitio) y en esa
-esquina aparece una tarjeta de cristal claro con tu número subiendo y su gráfica de línea dibujándose.
+"""sobre-el-hombro: la cámara se acerca de golpe hacia una esquina de arriba y ahí aparece una tarjeta de cristal claro con
+tu número subiendo y su gráfica de línea dibujándose, un poco METIDA DETRÁS DE TU CABEZA (tu cabeza o tu gorra va delante
+de la parte de abajo de la tarjeta). Si le das `barras`, la cámara vuelve al plano abierto y se acerca hacia la OTRA
+esquina, donde sale una segunda tarjeta, también detrás de tu cabeza, con las barras creciendo y su total.
 
-Lo que pasa, con la duración de siempre (3,5 s):
-  - 0–0,8 s: la cámara se acerca suave (de 1 a `zoom`, sin tirón) hacia la esquina de arriba del lado libre: la cara se
-    va un poco hacia el otro lado y hacia abajo, y arriba queda sitio.
-  - 0,3 s: la tarjeta sube con un rebote corto y un fundido. Lleva el título pequeño en mayúsculas (`titulo`), el
-    número grande que cuenta de `inicio` a `final` escrito corto («125K», «1,2M», «9,9K») y la gráfica de línea que se
-    dibuja de izquierda a derecha al mismo paso que el número (el número es siempre el valor de la punta), con un punto
-    brillante en la punta y debajo un degradado suave del color de la línea (`color`).
-  - Si se le dan `barras` («40,65,52,80,120»), debajo sale una tarjeta pequeña con esas barras creciendo una detrás de
-    otra y su total (`titulo_barras`).
-  - Los últimos 0,8 s: la cámara vuelve a como estaba, tan suave como entró (el último cuadro del efecto ya es el plano
-    original: el corte no se nota), y en cuanto empieza a volver las tarjetas se van con un fundido de 0,3 s. El cristal
-    se empaña al entrar y se desempaña al salir (no se funde: así no se ve nítido lo de detrás a través de él).
+Lo que pasa (el ritmo, copiado cuadro a cuadro de un Reel de referencia; los segundos cuentan desde `empieza`):
+  - 0–0,33 s: el primer acercamiento (de 1 a `zoom`), rápido: arranca y frena suave. La cámara va hacia la esquina
+    de arriba del lado de la tarjeta: tu cara se va al otro lado y hacia abajo, y tu cabeza queda justo debajo de la
+    tarjeta, tapando un poco su parte de abajo. Mientras está cerca sigue entrando muy despacio (no se queda muerta).
+  - 0,2 s: la tarjeta aparece en su sitio con un fundido corto y un rebote pequeño. Lleva el título pequeño en
+    mayúsculas (`titulo`) arriba a la izquierda, el número grande arriba a la derecha, que cuenta de `inicio` a `final`
+    escrito corto («125K», «1,2M», «9,9K»), y la gráfica de línea que se dibuja de izquierda a derecha al mismo paso que
+    el número (el número es siempre el valor de la punta), con un punto brillante en la punta y debajo un degradado
+    suave del color de la línea (`color`).
+  - Con `barras` («40,65,52,80,120»): a los 0,9 s la cámara vuelve al plano abierto en 0,33 s (la tarjeta se va justo
+    antes) y, sin llegar a pararse, se acerca igual de rápido hacia la otra esquina, donde sale la tarjeta de las
+    barras: su título (`titulo_barras`), su total (la suma de las barras) y las barras creciendo una detrás de otra.
+  - Con `portadas` (una carpeta con las portadas de tus Reels, en orden) la segunda tarjeta, en vez de barras, es una
+    rejilla de 4 × 2 con ellas (proporción de Reel, esquinas redondeadas), cada una con sus vistas (`vistas_portadas`)
+    en una pastilla; entran una detrás de otra con un fundido rápido mientras su total (`total`, o la suma) cuenta. La
+    primera va con un brillo dorado y su número más grande. La rejilla va del lado de fuera y el título y el total, del
+    lado de la cabeza (lo de abajo de ese lado queda detrás). La primera portada sale también, pequeña, junto al título
+    de la tarjeta de la línea.
+  - Los últimos 0,6 s: la cámara vuelve a como estaba, suave (el último cuadro del efecto ya es el plano original: el
+    corte no se nota), y en cuanto se pone en marcha la tarjeta se va con un fundido. El cristal se empaña al entrar y se
+    desempaña al salir (no se funde: así no se ve nítido lo de detrás a través de él).
   - Los números que cuentan cambian cada 3 cuadros (~10 veces por segundo): si cambiaran en cada cuadro, parpadearían.
+  - `empieza`: los segundos de plano quieto antes del primer acercamiento. Sirve en un montaje donde el clip se ve primero
+    pequeño (en una tarjeta de chat) y salta a la pantalla entera: el acercamiento, en el salto.
+  - Si el efecto dura menos de lo que pide este ritmo, todo se aprieta; si dura más, la última tarjeta se queda más.
 
-El cristal es claro: desenfoca lo que tiene detrás, lo blanquea, lleva un brillo en diagonal, un filo fino brillante
-(más claro arriba) y una sombra suave. El texto va oscuro, para que se lea en el teléfono.
+El cristal es claro: desenfoca lo que tiene detrás (la pared, sin la persona), lo blanquea, lleva un brillo en diagonal,
+un filo fino brillante (más claro arriba) y una sombra suave. El texto va oscuro, para que se lea en el teléfono.
 
-Nunca tapa la cara: la tarjeta va arriba, pegada al borde del lado libre, y si no cabe entre el borde y la cara (con la
-cámara quieta y con la cámara cerca) se hace más pequeña; si la persona se mueve hacia ella, sube lo que pueda y, si ni
-así, se desvanece antes que taparla. Todo queda en la zona segura de Instagram (de x 60 a x 1020 a 1080 de ancho y por
-debajo de y 210), también con el acercamiento: las tarjetas no se acercan con la cámara.
+Nunca tapa la cara: la tarjeta va DETRÁS de la persona (el recorte la tapa, con el color de verdad del borde de la
+persona, sin filo de la pared) y el acercamiento se calcula para que la tarjeta acabe por encima de la cara, solo detrás
+de la cabeza; si no cabe así, la tarjeta se hace más pequeña. La cara nunca se sale de la zona segura de Instagram, y las
+tarjetas tampoco (de x 60 a x 1020 a 1080 de ancho y por debajo de y 210): no se acercan con la cámara.
 
-    .venv/bin/python efectos.py sobre-el-hombro tu_video.mp4 --desde 2 --op final=125000 --fotos 2.5,4.5
+    .venv/bin/python efectos.py sobre-el-hombro tu_video.mp4 --desde 2 --op final=125000 --op barras=40,65,52,80 --fotos 2.5,3.5
 """
 import math
 import re
@@ -35,46 +49,64 @@ from PIL import Image, ImageDraw
 import base as B
 
 NOMBRE = 'sobre-el-hombro'
-DESCRIPCION = 'La cámara se acerca a tu lado y aparece una gráfica de cristal con tu número subiendo'
+DESCRIPCION = 'La cámara se acerca a un lado y aparece una gráfica de cristal detrás de tu cabeza con tu número subiendo'
 OPCIONES = {
     'titulo': 'VISTAS',                 # la línea pequeña de arriba (va en mayúsculas)
     'inicio': '0',                      # de dónde empieza a contar el número
     'final': '125000',                  # dónde acaba («125000», «125.000», «125K» o «1,2M» valen)
-    'color': '#22C55E',                 # el color de la línea, su punto y su degradado
-    'barras': '',                       # una segunda tarjeta con barras: sus valores («40,65,52,80»; vacía: no sale)
-    'titulo_barras': 'ÚLTIMOS REELS',   # la línea pequeña de la tarjeta de las barras (encima de su total)
-    'lado': 'auto',                     # dónde va la tarjeta: «auto» (el lado de la cara con más sitio), «izquierda» o «derecha»
-    'zoom': '1.22',                     # cuánto se acerca la cámara (1 = nada; de 1 a 1,4)
+    'color': '#22C55E',                 # el color de la línea, su punto, su degradado y las barras
+    'barras': '',                       # un segundo acercamiento, al otro lado, con una tarjeta de barras: sus valores
+                                        # («40,65,52,80»; su total es la suma; vacía: un solo acercamiento)
+    'titulo_barras': 'ÚLTIMOS REELS',   # el título de la segunda tarjeta (barras o portadas): di qué es su total
+    'portadas': '',                     # una carpeta con las portadas de tus Reels, en orden (por nombre): la segunda
+                                        # tarjeta pasa a ser una rejilla de 4 × 2 con ellas y sus vistas (en vez de las
+                                        # barras), y la primera lleva la primera portada junto al título
+    'vistas_portadas': '',              # las vistas de cada portada, en el mismo orden y como se tienen que leer
+                                        # («1M|244K|147K|9937»; separadas por |)
+    'total': '',                        # el número grande de la segunda tarjeta (vacío: la suma de las barras o, si no
+                                        # hay, de las vistas de las portadas). Ponle el número exacto si lo tienes
+    'lado': 'auto',                     # hacia dónde va el primer acercamiento (y la línea): «auto» (el lado con más sitio;
+                                        # si estás en el centro, la izquierda), «izquierda» o «derecha». Las barras, al otro
+    'zoom': '1.75',                     # cuánto se acerca la cámara (1 = nada; de 1 a 2,2). Si con tanto la cara se saliera
+                                        # de la pantalla o la tarjeta no le cupiera encima, se acerca menos
+    'empieza': '0',                     # segundos de plano quieto antes del primer acercamiento
 }
 DURACION = 3.5
 
-# ── Los tiempos (segundos, para 3,5 s; si el efecto dura menos, todo se aprieta) ────────────────────────────────────
-CAMARA_ENTRA = 0.8          # la cámara se acerca en esto
-CAMARA_SALE = 0.8           # y vuelve en los últimos 0,8 s (tan suave como al entrar: si frena más deprisa, se nota el tirón)
-TARJETA_ENTRA = (0.30, 0.58)  # cuándo sube la tarjeta y lo que tarda su rebote
-FUNDIDO_ENTRA = 0.28
-SEGUNDA_DESPUES = 0.22      # la de las barras sale un poco después
-LINEA = (0.50, 2.15)        # la línea se dibuja (y el número cuenta) en este tramo
-BARRAS = (0.75, 1.95)       # las barras crecen en este tramo, una detrás de otra
-FUNDIDO_SALE = 0.30         # el fundido de las tarjetas…
-FUNDIDO_DESDE = 0.65        # …que empieza cuando quedan estos segundos (la cámara ya ha empezado a volver)
-SUBE = 64                   # desde cuántos px (a 1080) más abajo sube la tarjeta
+# ── El ritmo (segundos desde `empieza`; medido cuadro a cuadro en la referencia, que va a 30 fps) ──────────────────────
+ACERCA = 0.33               # cada acercamiento (10 cuadros: arranca y frena suave, deprisa en medio; con menos, el
+                            # primer y el último cuadro dan un tirón)
+DERIVA = 0.04               # mientras está cerca, sigue entrando muy despacio: un 4 % por segundo
+ENTRA = 0.20                # la tarjeta empieza a aparecer esto después de empezar su acercamiento…
+FUNDIDO_ENTRA = 0.20        # …con un fundido de esto (nada aparece de golpe)…
+REBOTE = 0.36               # …y sube a su sitio con un rebote corto en esto
+SUBE = 30                   # desde cuántos px (a 1080) más abajo sube
+LINEA = (0.26, 0.64)        # la línea se dibuja (y el número cuenta) en este tramo
+VUELVE = 0.90               # con barras: aquí la cámara empieza a volver al plano abierto…
+ALEJA = 0.33                # …en esto (arranca y frena suave)…
+FUNDIDO_SALE = 0.24         # …y la tarjeta de la línea se va con un fundido de esto (arranca y acaba suave)…
+DESFASE = -0.10             # …que empieza esto antes de que la cámara se mueva: así ya no está cuando, al alejarse, la
+                            # cabeza destapa su esquina (se veía un cuadro suelto), y no arranca en el mismo cuadro que la
+                            # cámara (sumadas, daban un tirón)
+CRUCE = 0.10                # el segundo acercamiento arranca esto antes de que acabe la vuelta (las dos cosas a la vez,
+                            # como en la referencia: la cámara no llega a pararse; parada del todo, el arranque se notaba)
+BARRAS = (0.22, 0.50)       # las barras crecen (y su total cuenta) en este tramo, desde que empieza el segundo acercamiento
+LEER = 0.30                 # lo mínimo para leer el último número antes de que la cámara vuelva
+VUELTA = 0.60               # al acabar, la cámara vuelve al plano de verdad en esto (y frena más suave todavía: después
+                            # el plano se queda quieto, y un frenazo ahí se nota)
 
 # ── La colocación (a 1080 × 1920; se escala con el vídeo) ───────────────────────────────────────────────────────────
-BORDE = 66                  # de la tarjeta al borde del cuadro (la zona segura empieza en 60)
-ARRIBA = 230                # dónde empieza la tarjeta por arriba (lo de Instagram acaba en 210)
-TECHO = 214                 # lo más arriba que puede subir si la persona se le acerca
-ANCHO, ALTO = 540, 350      # la tarjeta grande, a tamaño completo
-ANCHO2, ALTO2 = 330, 236    # la de las barras
-TAMANO = 1.2                # las dos, a este tamaño (las medidas de arriba y las de dentro van a 1080 × 1920 × esto)
-HUECO2 = 20                 # entre las dos
-MENOR = 0.6                 # lo más pequeña que se hace para no tapar la cara (en proporción)
-MENOR2 = 0.78               # la de las barras, más pequeña que esto ya no se lee: si no cabe, no sale
-MARGEN_CARA = 0.5           # la distancia mínima de la grande a la cara, en anchos de cara (encima: no pisa la gorra)
-MARGEN_BARRAS = 0.38        # la de las barras va al lado, a la altura del hombro: así no llega a la oreja
-HOLGURA = 0.6               # mientras dura, solo se apartan si la cara se mete en el 60 % de ese margen
+BORDE = 66                  # de la tarjeta al borde de su lado (la zona segura empieza en 60)
+ARRIBA = 232                # dónde empieza la tarjeta por arriba (lo de Instagram acaba en 210)
+ANCHO, ALTO = 860, 480      # las dos tarjetas, a tamaño completo (en la referencia, ~0,8 del ancho y ~0,27 del alto)
+MENOR = 0.62                # lo más pequeñas que se hacen si no caben encima de la cara (en proporción)
+SOLAPE = 0.27               # cuánto de la tarjeta (de su alto) queda detrás de la cabeza: la coronilla va ahí (en la
+                            # referencia, ~1/3 por donde la cabeza es más alta)
+CARA_X = 0.70               # dónde queda el centro de la cara con la cámara cerca (en proporción del ancho, desde el
+                            # lado de la tarjeta): la cara se va al otro lado, como en la referencia
+MARGEN_CARA = 0.25          # de la tarjeta a la frente, como poco (en anchos de cara): la tarjeta solo va detrás de la cabeza
 DESENFOQUE = 44             # cuánto se desenfoca lo de detrás (a 1080): mucho, para que un cuadro oscuro detrás no manche
-BLANCO = 0.64               # cuánto blanquea el cristal arriba (abajo, un poco menos)
+BLANCO = 0.6                # cuánto blanquea el cristal arriba (abajo, un poco menos)
 SS = 4                      # la línea se dibuja 4 veces más grande y se reduce (bordes suaves)
 
 TINTA = (20, 17, 34)        # el texto oscuro
@@ -84,7 +116,7 @@ TINTA_SUAVE = (74, 70, 96)  # el título
 # ── Números ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 def _leer_numero(v, defecto):
     """«125000», «125.000», «125 000», «125K», «1,2M», «9,9 mil» → número. Si no se entiende, `defecto`."""
-    s = str(v or '').strip().lower().replace(' ', '').replace(' ', '')
+    s = str(v or '').strip().lower().replace(' ', '').replace(' ', '')
     if not s:
         return defecto
     mult = 1.0
@@ -150,6 +182,20 @@ def _seno(x):
     return 0.5 - 0.5 * math.cos(math.pi * x)
 
 
+def _acerca(x):
+    """La curva de los acercamientos y de la vuelta al plano abierto: arranca y frena suave, muy deprisa en medio. Medido
+    cuadro a cuadro en la referencia (cuánto cambia la imagen de un cuadro al siguiente): sube en 3–4 cuadros, cada uno
+    como mucho ~2,4 veces el anterior, y baja igual. Si arrancara a toda velocidad (o con una curva seno, en una toma
+    tranquila), el primer cuadro sería un tirón: por eso es casi toda cúbica."""
+    return 0.75 * B.suave(x) + 0.25 * _seno(x)
+
+
+def _frena(x):
+    """La vuelta del final: como `_acerca`, pero frena todavía más suave (después viene el plano quieto)."""
+    x = min(1.0, max(0.0, x))
+    return x * x * x * (10.0 - 15.0 * x + 6.0 * x * x)
+
+
 # ── Dibujo con números (con decimales, sin saltitos) ────────────────────────────────────────────────────────────────
 def _rejilla(w, h):
     xs = np.arange(w, dtype=np.float32) + 0.5
@@ -211,17 +257,28 @@ class _Rotulo:
         self.pad = (capa.height - (asc + desc)) / 2
         bb = f.getbbox('H')
         self.medio = self.pad + (bb[1] + bb[3]) / 2
+        self.derecha = self.pad + f.getbbox(s)[2] if s else self.pad      # dónde acaba la tinta
         self.arr = _premult(capa)
 
     def poner(self, dst, x, y):
         """La tinta empieza en x y las mayúsculas quedan centradas en y."""
         _sobre(dst, self.arr, int(round(x - self.pad)), int(round(y - self.medio)))
 
+    def poner_derecha(self, dst, x, y):
+        """La tinta acaba en x (alineado a la derecha) y las mayúsculas quedan centradas en y."""
+        _sobre(dst, self.arr, int(round(x - self.derecha)), int(round(y - self.medio)))
+
 
 def _tam_que_cabe(s, peso, tam, ancho, espacio=0.0):
     f = B.fuente(peso, 100)
     largo = (sum(f.getlength(ch) for ch in s) + espacio * 100 * max(0, len(s) - 1)) if espacio else f.getlength(s)
     return min(tam, ancho / max(1e-3, largo / 100.0))
+
+
+def _ancho_numeros(inicio, final, tam):
+    """Lo más ancho que se pone el número mientras cuenta (para que el título no lo pise)."""
+    f = B.fuente('extrabold', tam)
+    return max(f.getlength(corto(v)) for v in np.linspace(inicio, final, 240))
 
 
 # ── La tarjeta de cristal claro ─────────────────────────────────────────────────────────────────────────────────────
@@ -265,6 +322,44 @@ class _Tarjeta:
         return c
 
 
+def _cabecera(T, k, titulo, tam_titulo, col, ancho_numero, pad, x0=None):
+    """Arriba a la izquierda (desde `x0`), el punto del color y el título pequeño, sin llegar al número (que va a la
+    derecha)."""
+    x0 = pad if x0 is None else x0
+    yt = 52 * k
+    quieto = Image.new('RGBA', (T.w * SS, T.h * SS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(quieto)
+    d.ellipse([x0 * SS, (yt - 7 * k) * SS, (x0 + 14 * k) * SS, (yt + 7 * k) * SS], fill=tuple(col) + (255,))
+    _sobre(T.base, _premult(quieto.resize((T.w, T.h), Image.LANCZOS)), 0, 0)
+    titulo = ' '.join(str(titulo or '').split()).upper()
+    if titulo:
+        libre = T.w - pad - x0 - 24 * k - ancho_numero - 28 * k
+        tam = _tam_que_cabe(titulo, 'medium', tam_titulo * k, max(40 * k, libre), 0.12)
+        _Rotulo(titulo, tam, 'medium', TINTA_SUAVE, espacio=0.12).poner(T.base, x0 + 24 * k, yt)
+
+
+def _miniatura(im, w, h, r):
+    """Una portada recortada a w × h (sin deformarla: se recorta lo que sobra, centrado) y con las esquinas redondeadas,
+    como capa premultiplicada."""
+    w, h = max(2, int(round(w))), max(2, int(round(h)))
+    iw, ih = im.size
+    e = max(w / iw, h / ih)
+    cw, ch = w / e, h / e
+    x0, y0 = (iw - cw) / 2, (ih - ch) / 2
+    hecha = im.convert('RGBA').resize((w, h), Image.LANCZOS, box=(x0, y0, x0 + cw, y0 + ch))
+    return _premult(B.recortar_redondo(hecha, r))
+
+
+def _rayas(T, k, pad, ys):
+    """Las rayas muy suaves de la gráfica (la de abajo, un poco más marcada)."""
+    quieto = Image.new('RGBA', (T.w * SS, T.h * SS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(quieto)
+    for i, y in enumerate(ys):
+        d.line([(pad * SS, y * SS), ((T.w - pad) * SS, y * SS)], fill=TINTA + (38 if i == len(ys) - 1 else 22,),
+               width=max(1, round(1.3 * k * SS)))
+    _sobre(T.base, _premult(quieto.resize((T.w, T.h), Image.LANCZOS)), 0, 0)
+
+
 def _curva(n=900):
     """La forma de la gráfica: sube cada vez más rápido, con tramos más y menos empinados (como unas vistas de verdad),
     pero sin bajar nunca, para que el número que va con la punta no retroceda. De 0 a 1 en x y en y."""
@@ -276,34 +371,32 @@ def _curva(n=900):
     return x, y / y[-1]
 
 
-def _principal(c, k, col):
-    """La tarjeta grande: título, número que cuenta y la gráfica de línea."""
+def _principal(c, k, col, a0):
+    """La tarjeta de la línea: título, número que cuenta (arriba a la derecha) y la gráfica de línea. `a0`: cuándo empieza
+    su acercamiento (los tiempos de dentro cuentan desde ahí)."""
     op = c.op
-    T = _Tarjeta(ANCHO * k, ALTO * k, 42 * k, k)
+    r = c.estado['r']
+    T = _Tarjeta(ANCHO * k, ALTO * k, 40 * k, k)
     w, h = T.w, T.h
-    pad = 36 * k
+    pad = 40 * k
     colf = np.float32(col) / 255.0
-    # las tres rayas muy suaves de la gráfica y el punto del color de la línea delante del título
-    gx0, gx1 = pad + 4 * k, w - pad - 4 * k
-    gy0, gy1 = 168 * k, h - 38 * k
-    quieto = Image.new('RGBA', (w * SS, h * SS), (0, 0, 0, 0))
-    d = ImageDraw.Draw(quieto)
-    for f in (0.0, 0.5, 1.0):
-        y = (gy0 + (gy1 - gy0) * f) * SS
-        d.line([(pad * SS, y), ((w - pad) * SS, y)], fill=TINTA + (24 if f < 1 else 38,),
-               width=max(1, round(1.3 * k * SS)))
-    yt = 50 * k
-    d.ellipse([pad * SS, (yt - 7 * k) * SS, (pad + 14 * k) * SS, (yt + 7 * k) * SS], fill=tuple(col) + (255,))
-    _sobre(T.base, _premult(quieto.resize((w, h), Image.LANCZOS)), 0, 0)
-    # el título
-    titulo = ' '.join(str(op.get('titulo') or '').split()).upper()
-    if titulo:
-        tam = _tam_que_cabe(titulo, 'medium', 26 * k, w - 2 * pad - 24 * k, 0.12)
-        _Rotulo(titulo, tam, 'medium', TINTA_SUAVE, espacio=0.12).poner(T.base, pad + 24 * k, yt)
+    inicio = _leer_numero(op.get('inicio'), 0.0)
+    final = _leer_numero(op.get('final'), 125000.0)
+    tam_num = 100 * k
+    portadas = c.estado.get('portadas') or []
+    x_titulo = pad
+    if portadas:                                      # la primera portada, pequeña, a la izquierda del título
+        mw, mh = 54 * k, 96 * k
+        _sobre(T.base, _miniatura(portadas[0], mw, mh, 9 * k), int(round(pad)), int(round(22 * k)))
+        x_titulo = pad + mw + 16 * k
+    _cabecera(T, k, op.get('titulo'), 26, col, _ancho_numeros(inicio, final, tam_num), pad, x_titulo)
+    gx0, gx1 = pad, w - pad
+    gy0, gy1 = 156 * k, h - 40 * k
+    _rayas(T, k, pad, (gy0, (gy0 + gy1) / 2, gy1))
 
-    # la curva en píxeles de la tarjeta
+    # la curva en píxeles de la tarjeta: de abajo a la izquierda a la raya de arriba a la derecha
     cx_, cy_ = _curva()
-    arriba, abajo = gy0 + 14 * k, gy1 - 7 * k
+    arriba, abajo = gy0, gy1 - 8 * k
     px = gx0 + (gx1 - gx0) * cx_
     py = abajo - (abajo - arriba) * cy_
 
@@ -319,7 +412,7 @@ def _principal(c, k, col):
     dg = ImageDraw.Draw(grande)
     puntos = [(float(a) * SS, float(b) * SS) for a, b in zip(px[::6], py[::6])] + [(float(px[-1]) * SS,
                                                                                  float(py[-1]) * SS)]
-    grosor = 7.5 * k * SS
+    grosor = 8 * k * SS
     dg.line(puntos, fill=255, width=int(round(grosor)), joint='curve')
     for (a, b) in (puntos[0], puntos[-1]):
         dg.ellipse([a - grosor / 2, b - grosor / 2, a + grosor / 2, b + grosor / 2], fill=255)
@@ -327,14 +420,10 @@ def _principal(c, k, col):
     resplandor = cv2.GaussianBlur(linea, (0, 0), 7 * k) * 0.55
     _pintar(g, np.clip(resplandor, 0, 1).astype(np.float32), colf)
     _pintar(g, np.clip(linea, 0, 1).astype(np.float32), colf)
-    T.grafica = g
-    T.columnas = xx[0]
+    columnas = xx[0]
 
     # el número (sus capas se guardan por texto: cambian muchas veces y se repiten)
-    inicio = _leer_numero(op.get('inicio'), 0.0)
-    final = _leer_numero(op.get('final'), 125000.0)
     rotulos = {}
-    tam_num = 86 * k
 
     def numero(s):
         if s not in rotulos:
@@ -345,21 +434,20 @@ def _principal(c, k, col):
     lado = int(math.ceil(64 * k))
     pxx, pyy = _rejilla(lado, lado)
     blanco = np.float32([1.0, 1.0, 1.0])
-    l0, l1 = LINEA
+    l0, l1 = a0 + LINEA[0] * r, a0 + LINEA[1] * r
 
     def animar(capa, t):
-        q = _seno(B.tramo(t, l0 * c.estado['r'], l1 * c.estado['r']))
+        q = _seno(B.tramo(t, l0, l1))
         xt = gx0 + (gx1 - gx0) * q
         yt_ = float(np.interp(xt, px, py))
         # destapa la línea y el degradado hasta la punta (borde suave de un píxel)
-        cols = np.clip(xt - T.columnas + 0.5, 0, 1).astype(np.float32)
+        cols = np.clip(xt - columnas + 0.5, 0, 1).astype(np.float32)
         hasta = min(w, int(math.ceil(xt + 2 * k + 2)))
-        trozo = g[:, :hasta] * cols[None, :hasta, None]
-        _sobre(capa, trozo, 0, 0)
+        _sobre(capa, g[:, :hasta] * cols[None, :hasta, None], 0, 0)
         # el número: el valor de la gráfica en la punta (al acabar, justo el final)
-        qn = _seno(B.tramo(_a_saltos(t, l0 * c.estado['r'], c.fps), l0 * c.estado['r'], l1 * c.estado['r']))
+        qn = _seno(B.tramo(_a_saltos(t, l0, c.fps), l0, l1))
         v = inicio + (final - inicio) * float(np.interp(qn, cx_, cy_))
-        numero(corto(final if q >= 1.0 else v)).poner(capa, pad - 2 * k, 112 * k)
+        numero(corto(final if q >= 1.0 else v)).poner_derecha(capa, w - pad, 84 * k)
         # el punto brillante: halo que late, aro de color y centro blanco
         ox, oy = int(round(xt - lado / 2)), int(round(yt_ - lado / 2))
         rr = np.sqrt((pxx + ox - xt) ** 2 + (pyy + oy - yt_) ** 2)
@@ -373,151 +461,351 @@ def _principal(c, k, col):
     return T
 
 
-def _barras(c, k, col, valores):
-    """La tarjeta pequeña: su título, el total que cuenta y las barras que crecen una detrás de otra."""
-    T = _Tarjeta(ANCHO2 * k, ALTO2 * k, 34 * k, k)
+def _barras(c, k, col, valores, a0):
+    """La tarjeta de las barras: su título, el total que cuenta (arriba a la derecha) y las barras que crecen una detrás
+    de otra. La más alta, del color entero; las demás, más claras. `a0`: cuándo empieza su acercamiento."""
+    r = c.estado['r']
+    T = _Tarjeta(ANCHO * k, ALTO * k, 40 * k, k)
     w, h = T.w, T.h
-    pad = 28 * k
+    pad = 40 * k
     colf = np.float32(col) / 255.0
-    claro = colf + (1.0 - colf) * 0.32
-    titulo = ' '.join(str(c.op.get('titulo_barras') or '').split()).upper()
-    if titulo:
-        tam = _tam_que_cabe(titulo, 'medium', 21 * k, w - 2 * pad, 0.12)
-        _Rotulo(titulo, tam, 'medium', TINTA_SUAVE, espacio=0.12).poner(T.base, pad, 40 * k)
+    claro = colf + (1.0 - colf) * 0.4
     total = sum(valores)
+    tam_num = 100 * k
+    _cabecera(T, k, c.op.get('titulo_barras'), 26, col, _ancho_numeros(0.0, total, tam_num), pad)
+    n = len(valores)
+    gx0, gx1 = pad, w - pad
+    gy0, gy1 = 156 * k, h - 40 * k
+    _rayas(T, k, pad, (gy0, (gy0 + gy1) / 2, gy1))
     rotulos = {}
-    tam_num = 50 * k
 
     def numero(s):
         if s not in rotulos:
             rotulos[s] = _Rotulo(s, tam_num, 'extrabold', TINTA)
         return rotulos[s]
 
-    n = len(valores)
-    gx0, gx1 = pad, w - pad
-    gy0, gy1 = 112 * k, h - 26 * k
     paso = (gx1 - gx0) / n
-    bw = paso * 0.62
+    bw = paso * 0.66
     mayor = max(valores) if max(valores) > 0 else 1.0
     ox, oy = int(math.floor(gx0)), int(math.floor(gy0)) - 2
     zw, zh = int(math.ceil(gx1 - gx0)) + 2, int(math.ceil(gy1 - gy0)) + 4
     xx, yy = _rejilla(zw, zh)
     xx, yy = xx + ox, yy + oy
-    b0, b1 = BARRAS
+    b0, b1 = a0 + BARRAS[0] * r, a0 + BARRAS[1] * r
     imax = int(np.argmax(valores))
 
     def animar(capa, t):
-        r = c.estado['r']
-        dur = (b1 - b0) * r
+        dur = b1 - b0
         cada = dur / (1.0 + 0.35 * (n - 1))
-        lleno = 0.0
-        tn = _a_saltos(t, b0 * r, c.fps)
+        # el total cuenta parejo de 0 a la suma mientras crecen las barras (si sumara lo que llevan las barras, con la
+        # más alta la primera saltaría de 0 a casi todo de una vez)
+        lleno = total * _seno(B.tramo(_a_saltos(t, b0, c.fps), b0, b1))
         for i, v in enumerate(valores):
-            a = b0 * r + i * cada * 0.35
-            lleno += v * min(1.0, B.rebote(B.tramo(tn, a, a + cada), 1.0) if tn > a else 0.0)
+            a = b0 + i * cada * 0.35
             p = B.rebote(B.tramo(t, a, a + cada), 1.0) if t > a else 0.0
             if p <= 0:
                 continue
-            alto = max(bw * 0.5, (gy1 - gy0) * 0.94 * (v / mayor) * p)
+            alto = max(bw * 0.3, (gy1 - gy0) * (v / mayor) * p)
             cxb = gx0 + paso * (i + 0.5)
-            sd = _sdf_caja(xx, yy, cxb, gy1 - alto / 2, bw / 2, alto / 2, min(bw / 2, 7 * k))
+            sd = _sdf_caja(xx, yy, cxb, gy1 - alto / 2, bw / 2, alto / 2, min(bw / 2, 9 * k))
             _pintar(capa, _cob(sd), colf if i == imax else claro, min(1.0, p * 3), ox, oy)
-        acabado = t >= b1 * r + 0.05
-        numero(corto(total if acabado else lleno)).poner(capa, pad - 1.5 * k, 80 * k)
+        acabado = t >= b1 + 0.05
+        numero(corto(total if acabado else lleno)).poner_derecha(capa, w - pad, 84 * k)
+
+    T.animar = animar
+    return T
+
+
+ORO = (250, 204, 21)        # el brillo y la pastilla de la primera portada (la de más vistas)
+ENTRA_PORTADA = 0.14        # cada portada entra con un fundido de esto…
+CADA_PORTADA = 0.035        # …una detrás de otra, con este escalonado
+
+
+def _rejilla_portadas(c, k, col, etiquetas, total, a0, derecha):
+    """La segunda tarjeta con portadas: a un lado, el título (en dos líneas si hace falta) y el total que cuenta, con
+    «VISTAS EN TOTAL» debajo; al otro, las portadas en una rejilla de 4 × 2, con proporción de Reel y esquinas
+    redondeadas, cada una con sus vistas en una pastilla. La primera, con un brillo dorado y su número más grande. La
+    rejilla va del lado de fuera (el de la tarjeta que no tapa la cabeza) y el texto arriba del lado de dentro: lo de
+    abajo de ese lado queda detrás de la cabeza. Entran una detrás de otra con un fundido rápido mientras el total
+    cuenta. `derecha`: la tarjeta va a la derecha."""
+    r = c.estado['r']
+    imgs = c.estado['portadas']
+    n = len(imgs)
+    T = _Tarjeta(ANCHO * k, ALTO * k, 40 * k, k)
+    w, h = T.w, T.h
+    pad = 28 * k
+    gap = 12 * k
+    filas = 2 if n > 4 else 1
+    cols = 4 if n > 4 else n
+    th = (h - 2 * pad - gap * (filas - 1)) / filas
+    tw = th * 9 / 16
+    gw = cols * tw + (cols - 1) * gap
+    gx = w - pad - gw if derecha else pad
+    tx0 = pad + 6 * k if derecha else gx + gw + 30 * k               # la columna del texto
+    tx1 = gx - 30 * k if derecha else w - pad
+    ancho_txt = max(60 * k, tx1 - tx0)
+    # el título, en las líneas que hagan falta, con el punto del color delante
+    titulo = ' '.join(str(c.op.get('titulo_barras') or '').split()).upper()
+    tam_t = 24 * k
+    palabras = titulo.split()
+    if not palabras or _tam_que_cabe(titulo, 'medium', tam_t, ancho_txt - 24 * k, 0.12) >= tam_t * 0.999:
+        lineas = [titulo] if titulo else []
+    else:                                       # en dos líneas, partido donde quedan más parejas
+        f = B.fuente('medium', 100)
+        corte = min(range(1, len(palabras)) or [1], key=lambda i: max(f.getlength(' '.join(palabras[:i])),
+                                                                     f.getlength(' '.join(palabras[i:]))))
+        lineas = [' '.join(palabras[:corte]), ' '.join(palabras[corte:])]
+    quieto = Image.new('RGBA', (w * SS, h * SS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(quieto)
+    yt = 52 * k
+    d.ellipse([tx0 * SS, (yt - 7 * k) * SS, (tx0 + 14 * k) * SS, (yt + 7 * k) * SS], fill=tuple(col) + (255,))
+    _sobre(T.base, _premult(quieto.resize((w, h), Image.LANCZOS)), 0, 0)
+    for i, ln in enumerate(lineas):
+        tam = _tam_que_cabe(ln, 'medium', tam_t, ancho_txt - 24 * k, 0.12)
+        _Rotulo(ln, tam, 'medium', TINTA_SUAVE, espacio=0.12).poner(T.base, tx0 + 24 * k, yt + i * 34 * k)
+    y_num = yt + len(lineas) * 34 * k + 52 * k
+    tam_num = min(100 * k, _tam_que_cabe(corto(total), 'extrabold', 100 * k, ancho_txt))
+    _Rotulo('VISTAS EN TOTAL', 20 * k, 'medium', TINTA_SUAVE, espacio=0.12).poner(T.base, tx0, y_num + 62 * k)
+    rotulos = {}
+
+    def numero(s):
+        if s not in rotulos:
+            rotulos[s] = _Rotulo(s, tam_num, 'extrabold', TINTA)
+        return rotulos[s]
+
+    # cada portada, hecha una vez: su brillo (la primera), la portada, su filo y su pastilla
+    m = int(math.ceil(26 * k))
+    fichas = []
+    for i, im in enumerate(imgs):
+        W2, H2 = int(math.ceil(tw)) + 2 * m, int(math.ceil(th)) + 2 * m
+        f = np.zeros((H2, W2, 4), np.float32)
+        rr = 12 * k
+        xx, yy = _rejilla(W2, H2)
+        sd = _sdf_caja(xx, yy, W2 / 2, H2 / 2, tw / 2, th / 2, rr)
+        if i == 0:                                                   # el brillo dorado de la de más vistas
+            brillo = cv2.GaussianBlur(_cob(sd - 3 * k), (0, 0), 9 * k) * 0.95
+            _pintar(f, np.clip(brillo, 0, 1).astype(np.float32), np.float32(ORO) / 255.0)
+        _sobre(f, _miniatura(im, tw, th, rr), m, m)
+        if i == 0:
+            _pintar(f, (_cob(sd) - _cob(sd + 3.2 * k)).astype(np.float32), np.float32(ORO) / 255.0)
+        else:
+            _pintar(f, (_cob(sd) - _cob(sd + 1.4 * k)).astype(np.float32), np.float32([1, 1, 1]), 0.55)
+        txt = etiquetas[i] if i < len(etiquetas) else ''
+        if txt:
+            grande = i == 0
+            tam = (25 if grande else 19) * k
+            rot = _Rotulo(txt, tam, 'extrabold' if grande else 'bold', TINTA if grande else (255, 255, 255))
+            ancho = B.fuente('extrabold' if grande else 'bold', tam).getlength(txt)
+            pw, ph = min(tw - 8 * k, ancho + 20 * k), (40 if grande else 32) * k
+            pcx, pcy = W2 / 2, m + th - 10 * k - ph / 2
+            psd = _sdf_caja(xx, yy, pcx, pcy, pw / 2, ph / 2, ph / 2)
+            if grande:
+                _pintar(f, _cob(psd), np.float32(ORO) / 255.0)
+            else:
+                _pintar(f, _cob(psd), np.float32([15, 12, 30]) / 255.0, 0.74)
+            rot.poner(f, pcx - ancho / 2, pcy)
+        col_i, fila_i = i % cols, i // cols
+        x = gx + col_i * (tw + gap) - m
+        y = pad + fila_i * (th + gap) - m
+        fichas.append((f, x, y))
+    b0 = a0 + BARRAS[0] * r
+    b1 = b0 + ((n - 1) * CADA_PORTADA + ENTRA_PORTADA) * r
+
+    def animar(capa, t):
+        for i, (f, x, y) in enumerate(fichas):
+            a = b0 + i * CADA_PORTADA * r
+            p = B.tramo(t, a, a + ENTRA_PORTADA * r)
+            if p <= 0:
+                continue
+            alfa = _seno(p)
+            e = 0.9 + 0.1 * B.rebote(p, 1.0)
+            hh, ww = f.shape[:2]
+            X0, Y0 = int(math.floor(x)), int(math.floor(y))
+            # escalada desde su centro y subiendo un poco, con decimales
+            M = np.float32([[e, 0, (1 - e) * ww / 2 + (x - X0)], [0, e, (1 - e) * hh / 2 + (y - Y0) + (1 - alfa) * 10 * k]])
+            hecha = cv2.warpAffine(f, M, (ww, hh), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
+                                   borderValue=(0, 0, 0, 0))
+            _sobre(capa, hecha * np.float32(alfa), X0, Y0)
+        v = total * _seno(B.tramo(_a_saltos(t, b0, c.fps), b0, b1))
+        numero(corto(total if t >= b1 + 0.05 else v)).poner(capa, tx0 - 2 * k, y_num)
 
     T.animar = animar
     return T
 
 
 # ── La colocación ───────────────────────────────────────────────────────────────────────────────────────────────────
-def _caja_cara(cara, s, P):
-    """La caja de la cara (x0, y0, x1, y1, ancho) con la cámara acercada `s` hacia P."""
+def _cam(s, P):
+    """La cámara acercada `s` veces hacia el punto P, como (s, tx, ty): cada punto x del cuadro va a s·x + t."""
+    return (s, P[0] * (1.0 - s), P[1] * (1.0 - s))
+
+
+def _caja_cara(cara, cam):
+    """La caja de la cara (x0, y0, x1, y1, ancho) con la cámara `cam`."""
+    s, tx, ty = cam
     cx, cy, fw = (float(v) for v in cara)
-    cx, cy, fw = P[0] + s * (cx - P[0]), P[1] + s * (cy - P[1]), fw * s
+    cx, cy, fw = s * cx + tx, s * cy + ty, fw * s
     return cx - 0.5 * fw, cy - 0.62 * fw, cx + 0.5 * fw, cy + 0.58 * fw, fw
 
 
-def _distancia(caja, x0, y0, x1, y1):
-    fx0, fy0, fx1, fy1, _ = caja
-    dx = max(fx0 - x1, x0 - fx1, 0.0)
-    dy = max(fy0 - y1, y0 - fy1, 0.0)
-    return math.hypot(dx, dy)
+def _coronilla(c, cx, cy, fw):
+    """Dónde empieza la cabeza por arriba (la coronilla, o lo alto de la gorra), en el cuadro sin acercar: la primera fila,
+    encima de la cara, donde la silueta ocupa algo en la franja de la cabeza. Sin silueta, un ancho de cara por encima."""
+    m = c.mascara
+    if m is None or m.size == 0:
+        return cy - 1.0 * fw
+    x0, x1 = int(max(0, cx - 0.55 * fw)), int(min(c.W, cx + 0.55 * fw))
+    y1 = int(min(c.H, max(1, cy)))
+    if x1 - x0 < 4:
+        return cy - 1.0 * fw
+    filas = (m[:y1, x0:x1] > 0.5).mean(axis=1)
+    hay = np.nonzero(filas > 0.04)[0]
+    return float(hay[0]) if hay.size else cy - 1.0 * fw
 
 
-def _rect(c, izq, k, ancho, alto, y0):
-    u = c.u
-    w, h = ancho * k * TAMANO * u, alto * k * TAMANO * u
-    x0 = BORDE * u if izq else c.W - BORDE * u - w
-    return x0, y0, x0 + w, y0 + h
-
-
-def _cabe(cajas, rect, margen=MARGEN_CARA):
-    return all(_distancia(cj, *rect) >= margen * cj[4] for cj in cajas)
+def _plan(c, izq, zoom):
+    """Un acercamiento: hacia dónde va la cámara (P), cuánto (s) y dónde queda su tarjeta (rect y tamaño k), con la cara
+    que hay en este cuadro. La tarjeta va arriba, pegada al borde de su lado; la cámara se acerca para que la coronilla
+    quede SOLAPE por encima del borde de abajo de la tarjeta y la cara al otro lado (CARA_X), sin salirse de la zona
+    segura y con la frente por debajo de la tarjeta. Si con `zoom` no se puede, se acerca menos; y si ni sin acercarse
+    cabe la tarjeta encima de la cara, la tarjeta se hace más pequeña."""
+    u, W, H = c.u, c.W, c.H
+    cx, cy, fw = (float(v) for v in c.cara)
+    corona = min(_coronilla(c, cx, cy, fw), cy - 0.62 * fw)
+    frente = cy - 0.62 * fw
+    y0 = ARRIBA * u
+    seguro0, seguro1 = 62 * u, W - 62 * u
+    mejor = None
+    for s in np.arange(zoom, 1.0 - 1e-6, -0.05):
+        s = float(s)
+        for k in np.arange(1.0, MENOR - 1e-6, -0.04):
+            k = float(k)
+            h = ALTO * u * k
+            # la cara: al otro lado de la tarjeta, dentro de la zona segura
+            medio = 0.5 * fw * s
+            xt = W * (CARA_X if izq else 1.0 - CARA_X)
+            xt = min(max(xt, seguro0 + medio), seguro1 - medio)
+            # la coronilla, SOLAPE por encima del borde de abajo de la tarjeta; y la frente, por debajo, con margen
+            yt = y0 + h * (1.0 - SOLAPE)
+            yt = max(yt, y0 + h + MARGEN_CARA * fw * s - s * (frente - corona))
+            if s > 1.0 + 1e-3:
+                P = ((xt - s * cx) / (1.0 - s), (yt - s * corona) / (1.0 - s))
+                P = (min(max(P[0], 0.0), W), min(max(P[1], 0.0), H))       # dentro del cuadro: la imagen lo llena
+            else:
+                P = (W / 2, H / 2)
+            caja = _caja_cara((cx, cy, fw), _cam(s, P))
+            bien = (caja[0] >= seguro0 - 1 and caja[2] <= seguro1 + 1 and caja[3] <= H
+                    and caja[1] >= y0 + h + MARGEN_CARA * caja[4] - 1)
+            if bien:
+                mejor = (s, P, k)
+                break
+        if mejor:
+            break
+    if mejor is None:                                     # ni sin acercarse: la tarjeta, lo más pequeña, y sin cámara
+        mejor = (1.0, (W / 2, H / 2), MENOR)
+    s, P, k = mejor
+    w, h = ANCHO * u * k, ALTO * u * k
+    x0 = BORDE * u if izq else W - BORDE * u - w
+    return {'s': s, 'P': P, 'k': k, 'rect': (x0, y0, x0 + w, y0 + h)}
 
 
 def _preparar(c):
-    u, W, H = c.u, c.W, c.H
     op = c.op
     L = {}
-    c.estado['r'] = min(1.0, c.dur / DURACION)
-    col = B.color(op.get('color') or '#22C55E')[:3]
-    zoom = min(1.4, max(1.0, _leer_numero(op.get('zoom'), 1.22)))
-    L['zoom'] = zoom
+    vals = _lista(op.get('barras'))
+    L['valores'] = vals if vals and max(vals) > 0 else []
+    carpeta = str(op.get('portadas') or '').strip()
+    portadas = B.imagenes_de(carpeta)[:8] if carpeta else []
+    c.estado['portadas'] = portadas
+    texto = str(op.get('vistas_portadas') or '')
+    etiquetas = [x.strip() for x in (texto.split('|') if '|' in texto else texto.split(';'))] if texto.strip() else []
+    L['etiquetas'] = (etiquetas + [''] * len(portadas))[:len(portadas)]
+    total = _leer_numero(op.get('total'), None)
+    if total is None:
+        total = sum(L['valores']) if L['valores'] else sum(_leer_numero(x, 0.0) for x in L['etiquetas'])
+    L['total'] = total
+    dos = bool(L['valores']) or bool(portadas)
+    L['dos'] = dos
+    # lo que pide el ritmo (sin contar `empieza`): con barras, los dos acercamientos; sin ellas, uno
+    necesita = (VUELVE + ALEJA - CRUCE + BARRAS[1] if dos else LINEA[1]) + LEER + VUELTA
+    empieza = max(0.0, _leer_numero(op.get('empieza'), 0.0))
+    empieza = min(empieza, max(0.0, c.dur - 0.6 * necesita))
+    r = min(1.0, (c.dur - empieza) / necesita)
+    c.estado['r'] = r
+    L['a1'] = empieza
+    L['v'] = empieza + VUELVE * r                              # la cámara vuelve al plano abierto (con barras)
+    L['a2'] = L['v'] + (ALEJA - CRUCE) * r                     # el segundo acercamiento
+    L['f'] = c.dur - VUELTA * r                                # la vuelta del final
+    L['col'] = B.color(op.get('color') or '#22C55E')[:3]
+    L['zoom'] = min(2.2, max(1.0, _leer_numero(op.get('zoom'), 1.75)))
     cx = float(c.cara[0])
     lado = str(op.get('lado') or 'auto').strip().lower()
-    izq = (cx >= W / 2) if lado not in ('izquierda', 'izq', 'derecha', 'der') else lado.startswith('izq')
+    if lado.startswith('izq'):
+        izq = True
+    elif lado.startswith('der'):
+        izq = False
+    else:                                                      # auto: el lado con más sitio; en el centro, la izquierda
+        izq = cx >= c.W * 0.44
     L['izq'] = izq
-    # la cámara se acerca hacia la esquina de arriba del lado libre (el centro de la tarjeta grande, a su altura de
-    # arriba): la cara se aparta hacia el otro lado y hacia abajo
-    r0 = _rect(c, izq, 1.0, ANCHO, ALTO, ARRIBA * u)
-    P = ((r0[0] + r0[2]) / 2, ARRIBA * u + 40 * u)
-    L['P'] = P
-    cajas = [_caja_cara(c.cara, 1.0, P), _caja_cara(c.cara, zoom, P)]
-    # la tarjeta grande: del tamaño completo hacia abajo, hasta que no se acerque a la cara (quieta y acercada)
-    k = MENOR
-    for kk in np.arange(1.0, MENOR - 1e-6, -0.02):
-        if _cabe(cajas, _rect(c, izq, kk, ANCHO, ALTO, ARRIBA * u)):
-            k = float(kk)
-            break
-    L['k'] = k
-    L['t1'] = _principal(c, k * TAMANO * u, col)
-    L['r1'] = _rect(c, izq, k, ANCHO, ALTO, ARRIBA * u)
-    # la de las barras, debajo y del mismo lado; si no cabe ni pequeña, no sale
-    L['t2'] = None
-    valores = _lista(op.get('barras'))
-    if valores and max(valores) > 0:
-        # primero debajo de la grande; si ahí no cabe sin hacerse ilegible, en la otra esquina de arriba
-        x0, y0, x1, y1 = L['r1']
-        for lado2, y2, desde in ((izq, y1 + HUECO2 * u, k), (not izq, ARRIBA * u, 1.0)):
-            for kk in np.arange(desde, MENOR2 - 1e-6, -0.02):
-                rect = _rect(c, lado2, kk, ANCHO2, ALTO2, y2)
-                pisa = rect[0] < x1 + HUECO2 * u and rect[2] > x0 - HUECO2 * u and rect[1] < y1 + HUECO2 * u - 1
-                if _cabe(cajas, rect, MARGEN_BARRAS) and rect[3] < H * 0.62 and not pisa:
-                    L['t2'] = _barras(c, float(kk) * TAMANO * u, col, valores)
-                    L['r2'] = rect
-                    break
-            if L['t2'] is not None:
-                break
+    L['p1'] = L['p2'] = None
     c.estado['L'] = L
     return L
 
 
 # ── Cada cuadro ─────────────────────────────────────────────────────────────────────────────────────────────────────
-def _vidrio(c, X0, Y0, X1, Y1, sigma):
-    """Lo que hay detrás de un trozo del cuadro, muy desenfocado (se desenfoca pequeño y se agranda: es suave)."""
+def _matriz(cam):
+    s, tx, ty = cam
+    return np.float32([[s, 0, tx], [0, s, ty]])
+
+
+def _camara(c, cam):
+    """Acerca el cuadro entero (con decimales: sin saltitos)."""
+    if cam[0] <= 1.0 + 1e-5:
+        return
+    hecho = cv2.warpAffine(c.img, _matriz(cam), (c.W, c.H), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    np.copyto(c.img, hecho)
+
+
+def _mascara_zona(c, cam, a0, b0, a1, b1):
+    """La silueta de la persona en un trozo del cuadro YA acercado (la del motor es la del cuadro sin acercar)."""
+    if c.mascara is None:
+        return None
+    if cam[0] <= 1.0 + 1e-5:
+        return np.ascontiguousarray(c.mascara[b0:b1, a0:a1], dtype=np.float32)
+    M = _matriz(cam)
+    M[0, 2] -= a0
+    M[1, 2] -= b0
+    return cv2.warpAffine(c.mascara.astype(np.float32, copy=False), M, (a1 - a0, b1 - b0), flags=cv2.INTER_LINEAR,
+                          borderMode=cv2.BORDER_REPLICATE)
+
+
+def _vidrio(c, X0, Y0, X1, Y1, sigma, cam):
+    """Lo que hay detrás de un trozo del cuadro, muy desenfocado y SIN la persona (la tarjeta está detrás de ella: el
+    cristal desenfoca la pared, no la gorra). Se desenfoca pequeño y se agranda: es suave."""
     m = int(math.ceil(2.5 * sigma))
     a0, b0, a1, b1 = max(0, X0 - m), max(0, Y0 - m), min(c.W, X1 + m), min(c.H, Y1 + m)
     trozo = c.img[b0:b1, a0:a1]
     f = 4
-    peq = cv2.resize(trozo, (max(1, (a1 - a0) // f), max(1, (b1 - b0) // f)), interpolation=cv2.INTER_AREA)
-    peq = cv2.GaussianBlur(peq, (0, 0), sigma / f, borderType=cv2.BORDER_REFLECT)
-    grande = cv2.resize(peq, (a1 - a0, b1 - b0), interpolation=cv2.INTER_LINEAR)
+    tam = (max(1, (a1 - a0) // f), max(1, (b1 - b0) // f))
+    peq = cv2.resize(trozo, tam, interpolation=cv2.INTER_AREA)
+    sg = sigma / f
+    plano = cv2.GaussianBlur(peq, (0, 0), sg, borderType=cv2.BORDER_REFLECT)
+    msk = _mascara_zona(c, cam, a0, b0, a1, b1)
+    if msk is not None and msk.max() > 0.004:
+        # la media de la pared de alrededor (convolución normalizada): donde hay persona, se rellena con la pared
+        pared = 1.0 - np.clip(cv2.resize(msk, tam, interpolation=cv2.INTER_AREA), 0, 1)
+        num = cv2.GaussianBlur(peq * pared[..., None], (0, 0), sg, borderType=cv2.BORDER_REFLECT)
+        den = cv2.GaussianBlur(pared, (0, 0), sg, borderType=cv2.BORDER_REFLECT)
+        sin = num / np.maximum(den, 1e-4)[..., None]
+        w = np.clip(den / 0.12, 0, 1)[..., None]
+        plano = sin * w + plano * (1.0 - w)
+    grande = cv2.resize(plano, (a1 - a0, b1 - b0), interpolation=cv2.INTER_LINEAR)
     return grande[Y0 - b0:Y1 - b0, X0 - a0:X1 - a0]
 
 
-def _poner_tarjeta(c, T, x, y, esc, alfa):
-    """Pone la tarjeta con su esquina de arriba a la izquierda en (x, y) (con decimales) y escalada `esc` desde su
-    centro: la sombra, el cristal (lo de detrás desenfocado) y lo de encima."""
+def _poner_tarjeta(c, T, x, y, esc, alfa, cam):
+    """Pone la tarjeta DETRÁS de la persona, con su esquina de arriba a la izquierda en (x, y) (con decimales) y
+    escalada `esc` desde su centro: la sombra, el cristal (lo de detrás desenfocado) y lo de encima; y después la persona
+    otra vez delante, con el color de verdad de su borde (sin el filo de la pared de detrás)."""
     if alfa <= 0.003:
         return
     u = c.u
@@ -529,10 +817,11 @@ def _poner_tarjeta(c, T, x, y, esc, alfa):
     if X1 <= X0 or Y1 <= Y0:
         return
     zona = c.img[Y0:Y1, X0:X1]
+    antes = zona.copy()
     # al entrar y al salir, el cristal se empaña y se desempaña (el desenfoque crece con él) en vez de fundirse: si se
     # fundiera, lo de detrás se vería nítido a través de la tarjeta a medio aparecer
     empano = B.sale(min(1.0, alfa * 1.25))
-    fondo = _vidrio(c, X0, Y0, X1, Y1, max(1.0, DESENFOQUE * u * empano))
+    fondo = _vidrio(c, X0, Y0, X1, Y1, max(1.0, DESENFOQUE * u * empano), cam)
     fondo = 1.0 - (1.0 - fondo) * np.float32(1.0 - 0.12 * empano)                 # un poco más claro, como esmerilado
     tam = (X1 - X0, Y1 - Y0)
     M = np.float32([[esc, 0, X - X0], [0, esc, Y - Y0]])
@@ -542,58 +831,108 @@ def _poner_tarjeta(c, T, x, y, esc, alfa):
     C = cv2.warpAffine(T.capa(c.t), M, tam, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
                        borderValue=(0, 0, 0, 0))
     a = np.float32(alfa)
-    zona *= (1.0 - sh * a)[..., None]
-    Fa = (F * np.float32(min(1.0, alfa * 2.5)))[..., None]
-    zona *= (1.0 - Fa)
-    zona += fondo * Fa
-    Ca = C[..., 3:4] * a
-    zona *= (1.0 - Ca)
+    Sa = sh * a
+    Fa = F * np.float32(min(1.0, alfa * 2.5))
+    Ca = C[..., 3] * a
+    zona *= (1.0 - Sa)[..., None]
+    zona *= (1.0 - Fa)[..., None]
+    zona += fondo * Fa[..., None]
+    zona *= (1.0 - Ca)[..., None]
     zona += C[..., :3] * a
+    # la persona, delante. Con la tarjeta (de color Cc y cobertura A) entre la pared (Bp) y la persona (Fp, silueta m):
+    # nuevo = m·Fp + (1 − m)·(A·Cc + (1 − A)·Bp) = antes + (1 − m)·[(tarjeta encima − antes) + m·A·(Fp − Bp)]
+    m = _mascara_zona(c, cam, X0, Y0, X1, Y1)
+    if m is not None and m.max() > 0.004:
+        # el borde, un poco más firme: con la cámara cerca, la silueta (que se hizo para el cuadro sin acercar) se
+        # agranda y su borde se ablanda, y sobre el cristal claro se veía como un halo oscuro alrededor de la gorra. Se
+        # aprieta alrededor de la mitad (el borde no se mueve: no se come la cabeza), más cuanto más cerca está
+        m = np.clip((m - 0.5) * (1.0 + 0.8 * (cam[0] - 1.0)) + 0.5, 0.0, 1.0)
+        A = 1.0 - (1.0 - Sa) * (1.0 - Fa) * (1.0 - Ca)
+        Fp, Bp = B.color_persona(antes, m, u)
+        m3 = m[..., None]
+        zona[:] = antes + (1.0 - m3) * ((zona - antes) + m3 * A[..., None] * (Fp - Bp))
 
 
-def _camara(c, s, P):
-    """Acerca el cuadro entero `s` veces hacia P (con decimales: sin saltitos)."""
-    if s <= 1.0 + 1e-5:
-        return
-    M = np.float32([[s, 0, P[0] * (1 - s)], [0, s, P[1] * (1 - s)]])
-    hecho = cv2.warpAffine(c.img, M, (c.W, c.H), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-    np.copyto(c.img, hecho)
+def _escala_en(L, t, dur):
+    """La cámara en t, como (s, tx, ty)."""
+    r = L['r']
+    a1, v, a2, f = L['a1'], L['v'], L['a2'], L['f']
+    A = ACERCA * r
+
+    def cerca(plan, a, t):
+        if plan is None or t < a:
+            return (1.0, 0.0, 0.0)
+        q = _acerca(B.tramo(t, a, a + A))
+        return _cam(math.exp(math.log(plan['s']) * q) * (1.0 + DERIVA * max(0.0, t - a - A)), plan['P'])
+
+    def base(t):
+        if not L['dos'] or t < v:
+            return cerca(L['p1'], a1, t)
+        # vuelve al plano abierto…
+        sv = cerca(L['p1'], a1, v)[0]
+        c1 = _cam(math.exp(math.log(sv) * (1.0 - _acerca(B.tramo(t, v, v + ALEJA * r)))), L['p1']['P'])
+        if t < a2 or L['p2'] is None:
+            return c1
+        # …y antes de que acabe, ya arranca el segundo acercamiento: las dos cosas a la vez (primero una y luego la otra)
+        c2 = cerca(L['p2'], a2, t)
+        return (c1[0] * c2[0], c2[0] * c1[1] + c2[1], c2[0] * c1[2] + c2[2])
+
+    if t < f:
+        return base(t)
+    sf, tx, ty = base(f)                                             # la vuelta del final (el último cuadro, ya original)
+    if sf <= 1.0 + 1e-6:
+        return (1.0, 0.0, 0.0)
+    fin = dur - 1.0 / 30.0
+    return _cam(math.exp(math.log(sf) * (1.0 - _frena(B.tramo(t, f, fin)))), (tx / (1.0 - sf), ty / (1.0 - sf)))
 
 
 def dibujar(c):
     L = c.estado.get('L') or _preparar(c)
+    L['r'] = r = c.estado['r']
+    t = c.t
+    if t < L['a1']:
+        return
+    # cada acercamiento se planea al empezar, con la cara de ese momento
+    if L['p1'] is None:
+        L['p1'] = _plan(c, L['izq'], L['zoom'])
+        L['t1'] = _principal(c, L['p1']['k'] * c.u, L['col'], L['a1'])
+    if L['dos'] and t >= L['a2'] and L['p2'] is None:
+        L['p2'] = _plan(c, not L['izq'], L['zoom'])
+        if c.estado.get('portadas'):
+            L['t2'] = _rejilla_portadas(c, L['p2']['k'] * c.u, L['col'], L['etiquetas'], L['total'], L['a2'],
+                                        L['izq'])                       # la segunda va al otro lado
+        else:
+            L['t2'] = _barras(c, L['p2']['k'] * c.u, L['col'], L['valores'], L['a2'])
     u = c.u
-    r = c.estado['r']
-    P = L['P']
 
-    # 1. la cámara: se acerca suave al empezar y vuelve al acabar (el último cuadro ya es el plano de verdad)
-    z = B.suave(B.tramo(c.t, 0, CAMARA_ENTRA * r)) * B.suave(B.tramo(c.queda, 0, CAMARA_SALE * r))
-    s = 1.0 + (L['zoom'] - 1.0) * z
-    _camara(c, s, P)
-    cara = _caja_cara(c.cara, s, P)
+    # 1. la cámara
+    cam = _escala_en(L, t, c.dur)
+    _camara(c, cam)
+    cara = _caja_cara(c.cara, cam)
 
-    # 2. las tarjetas: suben con un rebote y un fundido, flotan un poco y se van con un fundido cuando vuelve la cámara
-    sale = _seno(B.tramo(c.queda - (FUNDIDO_DESDE - FUNDIDO_SALE) * r, 0, FUNDIDO_SALE * r))
-    tarjetas = [(L['t1'], L['r1'], 0.0, MARGEN_CARA)]
-    if L['t2'] is not None:
-        tarjetas.append((L['t2'], L['r2'], SEGUNDA_DESPUES, MARGEN_BARRAS))
-    techo = TECHO * u
-    for T, (x0, y0, x1, y1), retraso, margen in tarjetas:
-        a0 = (TARJETA_ENTRA[0] + retraso) * r
-        p = B.tramo(c.t, a0, a0 + TARJETA_ENTRA[1] * r)
-        if p <= 0.0:
+    # 2. las tarjetas: aparecen con un fundido y un rebote corto, flotan un poco y se van con un fundido cuando la cámara
+    # empieza a volver
+    tarjetas = []
+    if L['dos']:
+        tarjetas.append((L['t1'], L['p1'], L['a1'], L['v']))
+        if L['p2'] is not None:
+            tarjetas.append((L['t2'], L['p2'], L['a2'], L['f']))
+    else:
+        tarjetas.append((L['t1'], L['p1'], L['a1'], L['f']))
+    for T, pl, a0, sale_en in tarjetas:
+        e = a0 + ENTRA * r
+        sale_en += DESFASE * r
+        if t < e or t >= sale_en + FUNDIDO_SALE * r:
             continue
+        x0, y0, x1, y1 = pl['rect']
+        p = B.tramo(t, e, e + REBOTE * r)
         entra = B.rebote(p, 1.1)
-        alfa = B.tramo(c.t, a0, a0 + FUNDIDO_ENTRA * r) * sale
-        flota = math.sin((c.t - a0) * 2 * math.pi / 2.8) * 3.0 * u * min(1.0, p * 1.5)
+        alfa = B.tramo(t, e, e + FUNDIDO_ENTRA * r) * (1.0 - B.suave(B.tramo(t, sale_en, sale_en + FUNDIDO_SALE * r)))
+        flota = math.sin((t - e) * 2 * math.pi / 2.8) * 3.0 * u * min(1.0, p * 1.5)
         y = y0 + (1.0 - entra) * SUBE * u + flota
-        esc = 0.95 + 0.05 * entra
-        # si la persona se le acerca de verdad (a menos de lo que se dejó al colocarla, con holgura para que moverse un
-        # poco no haga nada): la grande sube lo que pueda y, si ni así, las dos se desvanecen antes que tapar la cara
-        m = margen * HOLGURA * cara[4]
-        d = _distancia(cara, x0, y, x1, y + (y1 - y0))
-        if d < m and retraso == 0.0 and (y + (y1 - y0) / 2) < (cara[1] + cara[3]) / 2:
-            y = max(techo, y - (m - d))
-            d = _distancia(cara, x0, y, x1, y + (y1 - y0))
-        se_ve = 1.0 if d >= m else float(np.clip((d - 0.3 * m) / (0.7 * m), 0, 1))
-        _poner_tarjeta(c, T, x0, y, esc, alfa * se_ve)
+        esc = 0.96 + 0.04 * entra
+        # por si la persona se levanta mucho: si la frente se mete en la tarjeta, la tarjeta se desvanece (va detrás de
+        # la persona, pero así un fallo del recorte nunca la deja encima de la cara)
+        dentro = (y + (y1 - y0)) - cara[1]
+        se_ve = float(np.clip(1.0 - (dentro - 0.1 * cara[4]) / (0.25 * cara[4]), 0, 1))
+        _poner_tarjeta(c, T, x0, y, esc, alfa * se_ve, cam)

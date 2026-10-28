@@ -71,9 +71,9 @@ DURACION = 3.5
 DESENFOQUE = 28.0            # cuánto se desenfoca lo de detrás (a 1080)
 SOMBRA_PERSONA = (0.5, 7.0)   # la sombra de la persona en las tarjetas de detrás: cuánto oscurece y lo que se abre (a 1080)
 TINTE = (16, 12, 30)         # el tono oscuro del cristal (un violeta casi negro)
-OPACIDAD = 0.50              # cuánto pesa ese tono sobre lo de detrás
+OPACIDAD = 0.68              # cuánto pesa ese tono sobre lo de detrás (28 oct 2026: con 0,5 «se ve muy transparente»)
 VIVEZA = 1.18                # un poco más de color en lo desenfocado, como el cristal de un teléfono
-NIEBLA = 0.025               # un velo blanco muy suave: el esmerilado
+NIEBLA = 0.045               # un velo blanco muy suave: el esmerilado
 
 # ── El movimiento (segundos) ────────────────────────────────────────────────────────────────────────────────────────
 ENTRA = 0.45                 # lo que tarda el muelle de cada tarjeta
@@ -91,8 +91,8 @@ AGUJERO_MAX = 64             # px² (a 1080): los agujeritos sueltos de la silue
 SITIOS = {
     'editando': dict(x=598, y=520, orden=0, detras=True),     # tras la cabeza, a la derecha
     'calendario': dict(x=64, y=540, orden=1, detras=True),    # tras la cabeza y el hombro, a la izquierda
-    'contador': dict(x=64, y=196, orden=2),
-    'creador': dict(der=1010, y=372, orden=3),
+    'contador': dict(x=64, y=196, orden=2, detras=True),   # tras la cabeza: delante se apartaba de la cara y se veía medio transparente
+    'creador': dict(der=1010, y=372, orden=3, detras=True),  # tras la gorra (28 oct 2026: delante, la tapaba)
     'anillo': dict(x=764, y=858, orden=4, detras=True),       # tras el hombro derecho
     'etiqueta': dict(x=64, y=878, orden=5, detras=True),      # tras el brazo izquierdo
     'exportando': dict(der=1010, y=196, orden=6),
@@ -438,11 +438,11 @@ def _contador(c, E):
     marca = str(c.op.get('marca') or '').strip()
     if marca:
         tam = _tam_que_cabe(marca, 'medium', 28 * u, T.w - 2 * pad - 38 * u)
-        Rotulo(marca, tam, 'medium', (255, 255, 255, 225)).poner(T.contenido, pad + 38 * u, 43 * u)
+        Rotulo(marca, tam, 'medium', (255, 255, 255, 250)).poner(T.contenido, pad + 38 * u, 43 * u)
     texto = str(c.op.get('texto_numero') or '').strip()
     if texto:
         tam = _tam_que_cabe(texto, 'medium', 30 * u, T.w - 2 * pad)
-        Rotulo(texto, tam, 'medium', (255, 255, 255, 190)).poner(T.contenido, pad, 282 * u)
+        Rotulo(texto, tam, 'medium', (255, 255, 255, 235)).poner(T.contenido, pad, 282 * u)
     tam_num = _tam_que_cabe(str(n), 'extrabold', 188 * u, T.w - 2 * pad)
     y_num = 168 * u
     t0, t1 = 0.15 * R, 1.00 * R
@@ -471,7 +471,7 @@ def _contador(c, E):
         q = B.sale(B.tramo(t, cruces[i], cruces[i] + min(rueda, max(hueco, 1e-3)))) if i > 0 else 1.0
         r, arr = numero(pasos[i])
         x0, y0 = r.esquina(pad - 4 * u, y_num)
-        _sobre(capa, arr, x0, int(round(y0 + (1.0 - q) * 0.12 * r.alto_may)), 0.55 + 0.45 * q)
+        _sobre(capa, arr, x0, int(round(y0 + (1.0 - q) * 0.12 * r.alto_may)), 0.85 + 0.15 * q)   # casi lleno: con 0,55 se veía transparente
 
     T.animar = animar
     return T
@@ -1123,7 +1123,7 @@ def dibujar(c):
                 m3 = sil[..., None]
                 w = np.clip(cubre, 0.0, 1.0)[..., None]
                 # la sombra de la persona sobre la tarjeta: sin ella, una oreja en penumbra (azulada por la luz de la
-                # pared) se funde con el cristal oscuro y parece que no está (Kevin, 26 oct: «la oreja se me pierde por
+                # pared) se funde con el cristal oscuro y parece que no está (la persona, 26 oct: «la oreja se me pierde por
                 # detrás del fondo de la cápsula»). Suave, solo fuera de la persona y solo encima de la tarjeta
                 sombra = np.clip(cv2.GaussianBlur(sil, (0, 0), SOMBRA_PERSONA[1] * c.u) * 1.6, 0.0, 1.0) * (1.0 - sil)
                 zona *= 1.0 - SOMBRA_PERSONA[0] * sombra[..., None] * w
