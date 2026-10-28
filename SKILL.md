@@ -1,6 +1,6 @@
 ---
 name: efectos
-description: Pone efectos de edición a un vídeo vertical de alguien hablando a cámara (tarjetas de cristal a su alrededor, órbita de portadas, gráfico de barras en pantalla dividida, palabra gigante detrás de la cabeza, panel de edición en pantalla dividida, letrero LED, fondo nuevo con botón de seguir, comentario que se escribe solo, lista que se marca sola, línea de tiempo con color de cine, portada de revista, botón de seguir y tier list). Úsala cuando la persona escriba /efectos o te pida uno de estos efectos para su vídeo.
+description: Pone efectos de edición a un vídeo vertical de alguien hablando a cámara (tarjetas de cristal a su alrededor, órbita de portadas, gráfico de barras en pantalla dividida, palabra gigante detrás de la cabeza, panel de edición en pantalla dividida, letrero LED, fondo nuevo con botón de seguir, comentario que se escribe solo, lista que se marca sola, línea de tiempo con color de cine, portada de revista, botón de seguir, tier list, sus Reels saliendo del móvil en un carrusel, una gráfica de cristal sobre el hombro, un muro de texto detrás, mensajes que llegan, interruptores que se encienden y caer en el centro de su perfil). Úsala cuando la persona escriba /efectos o te pida uno de estos efectos para su vídeo.
 argument-hint: "[efecto] [del segundo X al Y]"
 ---
 
@@ -67,6 +67,10 @@ Aquí lo llamamos `PY efectos.py`.
      - `cristal`: su nombre y su cuenta y lo que cuenta el contador (`numero`, `texto_numero`). El calendario sale con
        la fecha de hoy (`fecha`=hoy) y `evento`; si lo sube otro día, pon ese día (`dia`, `fecha`), o `fecha` vacía y no
        sale.
+     - `carrusel` y `cuadricula`: sus portadas (una carpeta) y sus vistas de verdad, en el mismo orden. Sin vistas,
+       sin números. En el carrusel, además, dónde está su móvil (`movil`), mirándolo en un cuadro.
+     - `sobre-el-hombro`: su número de verdad (`final`) y qué cuenta (`titulo`).
+     - `mensajes` e `interruptores`: frases suyas y cortas. `muro`: la palabra que se resalta.
      - Nunca te inventes cifras, nombres o resultados que la persona no te dio.
 4. **Revisa antes de hacer el vídeo.** Saca fotos de 2 o 3 momentos de cada efecto: el principio, la mitad y el final.
    ```
@@ -97,7 +101,7 @@ Aquí lo llamamos `PY efectos.py`.
      y dile qué cambiaste. Ese cambio queda para sus vídeos siguientes; antes de actualizar con `git pull`, guárdalo con
      `git stash` (y `git stash pop` después) o se pisará.
 
-## Los 13 efectos
+## Los 19 efectos
 
 | Efecto | Qué hace | Dura | Opciones (y lo que traen) |
 |---|---|---|---|
@@ -114,6 +118,12 @@ Aquí lo llamamos `PY efectos.py`.
 | `lista` | Una tarjeta con los pasos de una tarea que se van marcando uno a uno | 6 s | `titulo`, `pasos` (`paso::dato\|paso::dato`), `marcas` (el segundo en que se marca cada paso: `1,2\|2\|3,1`), `color`, `estilo`=notificacion (o progreso, cristal) |
 | `portada` | Le convierte en la portada de una revista, con el título detrás de la cabeza | 4 s | `titulo`, `numero`, `lineas` (`grande\|otra\|otra`), `color`, `lado` (izquierda, derecha o auto), `zoom`=1.2 |
 | `boton-seguir` | Aparece un botón de Seguir junto a su cara y alguien lo pulsa | 3 s | `texto`=Seguir, `texto_hecho`=Siguiendo, `color`, `momento` (el segundo, o `mitad`), `lado` |
+| `carrusel` | Sus Reels salen de la pantalla de su móvil y giran en un carrusel encima de él; el que se pida pasa por delante con su número grande y dorado. Hace falta un plano con el móvil (de pie en la mesa o en la mano quieta, con la pantalla hacia la cámara) | 3 s | `imagenes` (carpeta), `vistas` (`1M\|114K\|…`, en el orden de las imágenes por nombre), `destaca` (el número grande, el de alguna tarjeta: «1M»), `movil` (`x,y` de la pantalla del móvil a 1080×1920: míralo en un cuadro), `ancho_movil`=240, `cantidad`=6, `tamano`=260, `velocidad`=1 |
+| `sobre-el-hombro` | La cámara se acerca a su lado y arriba aparece una tarjeta de cristal con su número subiendo y su gráfica de línea dibujándose | 3,5 s | `titulo`=VISTAS, `inicio`=0, `final` («125000», «125K», «1,2M»), `color`, `barras` (`40,65,52,80`; vacía = no sale), `titulo_barras`, `lado`=auto, `zoom`=1.22 |
+| `muro` | Detrás de la persona, una página de periódico llena de texto que se desliza, con una palabra resaltada en una caja de color encima de su cabeza | 3 s | `resalta`=Claude, `color`=#E5484D, `texto` (el párrafo del muro) |
+| `mensajes` | Le llegan mensajes uno detrás de otro, como las notificaciones del iPhone (el último queda arriba). Queda muy bien sobre un plano del móvil en la mesa | 3 s | `mensajes` (`uno\|otro\|…`), `app`=Mensajes, `hora`=ahora, `intervalo`=0.5, `maximo`=4, `lugar`=auto (arriba, centro o la y), `color` |
+| `interruptores` | Encima de su cabeza, una tarjeta de ajustes con interruptores que se encienden uno a uno | 3 s | `lineas` (`Un clip\|Escribo /efectos\|Cero apps de edición`), `color`=#34C759, `cada`=0.45, `detras`=auto |
+| `cuadricula` | Se aleja y cae en el centro de su perfil, rodeado de sus Reels con sus vistas | 3 s | `imagenes` (carpeta: sus portadas), `vistas` (`1M\|114K\|…`), `fondo`=oscuro (o claro), `icono`=reproducir (u ojo, o nada), `color`, `alejar`=0.88 |
 
 **Que la mano señale lo que sale**: si la persona señala arriba, a un lado o levanta el pulgar, mira los cuadros y pon
 el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del lado al que apunta).
@@ -122,7 +132,7 @@ el efecto justo ahí (el gráfico cuando señala arriba, el botón de seguir del
 
 ## Si te pide subtítulos
 
-No son uno de los 13 efectos, pero se pueden poner sobre el último vídeo que hiciste (o el que diga):
+No son uno de los 19 efectos, pero se pueden poner sobre el último vídeo que hiciste (o el que diga):
 1. Las palabras con su segundo: `PY motor/palabras.py video.mp4`. **Enséñale el texto y que lo corrija** antes de
    quemarlo (los nombres y las palabras raras salen mal a veces). Si sale «No he entendido ninguna palabra», su audio está
    muy bajo: díselo.

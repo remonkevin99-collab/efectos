@@ -1,9 +1,9 @@
 # Efectos para tus vídeos
 
-**13 efectos de edición para tus Reels, con un comando.** Le pasas a Claude tu vídeo hablando a cámara, le dices qué
+**19 efectos de edición para tus Reels, con un comando.** Le pasas a Claude tu vídeo hablando a cámara, le dices qué
 efecto quieres y en qué segundo, y en un minuto te deja el vídeo editado al lado del original. Tu voz se queda igual.
 
-![Los 13 efectos](ejemplos/efectos.jpg)
+![Los efectos](ejemplos/efectos.jpg)
 
 - **Gratis** y de código abierto (MIT).
 - **Corre en tu computadora**: tu vídeo no se sube a ningún sitio.
@@ -40,7 +40,7 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 
 ¿Subtítulos? Si quieres, pídele a Claude que se los ponga a tu vídeo. La música y los efectos de sonido no van incluidos: ponlos al subir o en tu editor.
 
-## Los 13 efectos
+## Los 19 efectos
 
 | | Efecto | Qué hace |
 |---|---|---|
@@ -57,6 +57,12 @@ Hecho por **Kevin Remón** · Instagram [@kevin.rf99](https://www.instagram.com/
 | 11 | `lista` | Una lista que se va marcando sola |
 | 12 | `portada` | Te conviertes en la portada de una revista |
 | 13 | `botón-seguir` | Aparece un botón de Seguir y alguien lo pulsa |
+| 14 | `carrusel` | Tus Reels salen de tu móvil y giran encima de él; el de más vistas pasa por delante con su número |
+| 15 | `sobre-el-hombro` | La cámara se acerca y aparece una tarjeta de cristal con tu número subiendo y su gráfica |
+| 16 | `muro` | Detrás de ti, una página llena de texto con una palabra resaltada |
+| 17 | `mensajes` | Te llegan mensajes uno detrás de otro, como en el iPhone |
+| 18 | `interruptores` | Encima de tu cabeza, unos interruptores que se encienden uno a uno |
+| 19 | `cuadrícula` | Te alejas y caes en el centro de tu perfil, rodeado de tus Reels con sus vistas |
 
 ## Antes de grabarte
 
